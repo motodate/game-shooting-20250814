@@ -42,14 +42,27 @@ class BulletManager {
                     { offsetX: 6, offsetY: -10, vx: 0, vy: -400 }
                 ]
             },
-            3: { // Lv3: 前方に3発を扇状発射（後で実装）
-                bullets: []
+            3: { // Lv3: 前方に3発を扇状発射
+                bullets: [
+                    { offsetX: 0, offsetY: -10, vx: 0, vy: -400 },           // 中央
+                    { offsetX: -8, offsetY: -10, vx: -60, vy: -400 },       // 左斜め
+                    { offsetX: 8, offsetY: -10, vx: 60, vy: -400 }          // 右斜め
+                ]
             },
-            4: { // Lv4: Lv3の弾を大型化（後で実装）
-                bullets: []
+            4: { // Lv4: Lv3の弾を大型化（サイズ1.5倍、速度向上）
+                bullets: [
+                    { offsetX: 0, offsetY: -10, vx: 0, vy: -450, size: 1.5 },
+                    { offsetX: -8, offsetY: -10, vx: -70, vy: -450, size: 1.5 },
+                    { offsetX: 8, offsetY: -10, vx: 70, vy: -450, size: 1.5 }
+                ]
             },
-            5: { // Lv5: Lv4 + 後方に1発追加（後で実装）
-                bullets: []
+            5: { // Lv5: Lv4 + 後方に1発追加
+                bullets: [
+                    { offsetX: 0, offsetY: -10, vx: 0, vy: -450, size: 1.5 },    // 前方中央
+                    { offsetX: -8, offsetY: -10, vx: -70, vy: -450, size: 1.5 },  // 前方左
+                    { offsetX: 8, offsetY: -10, vx: 70, vy: -450, size: 1.5 },   // 前方右
+                    { offsetX: 0, offsetY: 10, vx: 0, vy: 300, size: 1.2 }       // 後方
+                ]
             }
         };
     }
@@ -169,6 +182,13 @@ class BulletManager {
                 const fireX = x + bulletData.offsetX;
                 const fireY = y + bulletData.offsetY;
                 bullet.init(fireX, fireY, bulletData.vx, bulletData.vy);
+                
+                // サイズ調整（Lv4以上）
+                if (bulletData.size && bulletData.size > 1) {
+                    bullet.width = Math.round(bullet.width * bulletData.size);
+                    bullet.height = Math.round(bullet.height * bulletData.size);
+                }
+                
                 this.activeBullets.push(bullet);
                 firedCount++;
             }

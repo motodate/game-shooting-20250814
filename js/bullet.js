@@ -34,6 +34,10 @@ class Bullet {
         this.active = true;
         this.pooled = false;
         
+        // サイズをデフォルトにリセット
+        this.width = 6;
+        this.height = 14;
+        
         // 軌跡をリセット
         this.trailPositions = [];
         for (let i = 0; i < this.trailLength; i++) {
