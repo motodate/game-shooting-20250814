@@ -52,6 +52,9 @@ class Game {
         // Initialize effects manager
         this.effectsManager = new EffectsManager();
         
+        // Initialize experience manager
+        this.experienceManager = new ExperienceManager();
+        
         // Configure collision system
         this.configureCollisions();
         
@@ -149,7 +152,8 @@ class Game {
                 this.enemyManager, 
                 this.enemyBulletManager, 
                 deltaTime,
-                this.effectsManager
+                this.effectsManager,
+                this.experienceManager
             );
         }
         
@@ -264,6 +268,12 @@ class Game {
         if (this.collisionManager) {
             const optimizationInfo = this.collisionManager.getDebugInfo().optimizationEnabled;
             ctx.fillText(`Collision optimized: ${optimizationInfo.useScreenBounds ? 'ON' : 'OFF'}`, window.canvasManager.width - 200, window.canvasManager.height - 180);
+        }
+        
+        // Experience debug info
+        if (this.experienceManager) {
+            const expDebug = this.experienceManager.getDebugInfo();
+            ctx.fillText(`Level: ${expDebug.level} (${expDebug.currentExp}/${expDebug.expToNext}) ${expDebug.progress}%`, window.canvasManager.width - 250, window.canvasManager.height - 200);
         }
     }
     

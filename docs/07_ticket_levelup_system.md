@@ -18,11 +18,11 @@
 ## ✅ コミット粒度のToDo
 
 ### 1. ExperienceManagerクラスの実装
-- [ ] `js/experienceManager.js` を作成
-- [ ] 経験値の管理
-- [ ] レベルの管理（1〜5）
-- [ ] レベルアップ判定
-- [ ] 必要経験値テーブルの定義
+- [x] `js/experienceManager.js` を作成
+- [x] 経験値の管理
+- [x] レベルの管理（1〜5）
+- [x] レベルアップ判定
+- [x] 必要経験値テーブルの定義
 
 **コミットメッセージ例**: `feat: ExperienceManagerクラスを実装`
 

@@ -34,7 +34,7 @@ class CollisionManager {
      * メインの衝突チェックループ
      * 全ての衝突タイプをチェックする
      */
-    checkCollisions(player, bulletManager, enemyManager, enemyBulletManager, deltaTime, effectsManager = null) {
+    checkCollisions(player, bulletManager, enemyManager, enemyBulletManager, deltaTime, effectsManager = null, experienceManager = null) {
         // フレームの開始時に統計をリセット
         this.stats.checksPerFrame = 0;
         this.stats.collisionsPerFrame = 0;
@@ -43,8 +43,9 @@ class CollisionManager {
             return;
         }
         
-        // エフェクトマネージャーを保存（各衝突チェックメソッドで使用）
+        // マネージャーを保存（各衝突チェックメソッドで使用）
         this.effectsManager = effectsManager;
+        this.experienceManager = experienceManager;
         
         // 各種衝突チェック
         this.checkPlayerBulletsVsEnemies(bulletManager, enemyManager);
@@ -127,6 +128,11 @@ class CollisionManager {
                     if (isDestroyed) {
                         enemiesToDestroy.push(enemy);
                         console.log(`Enemy destroyed by bullet at (${enemy.x.toFixed(0)}, ${enemy.y.toFixed(0)})`);
+                        
+                        // 経験値を付与
+                        if (this.experienceManager) {
+                            this.experienceManager.gainExpFromEnemy(enemy.type);
+                        }
                         
                         // 爆発エフェクトを生成
                         if (this.effectsManager) {
@@ -381,6 +387,11 @@ class CollisionManager {
                     enemy.destroy();
                     enemiesToDestroy.push(enemy);
                     console.log('Small enemy destroyed by collision');
+                    
+                    // 経験値を付与
+                    if (this.experienceManager) {
+                        this.experienceManager.gainExpFromEnemy(enemy.type);
+                    }
                     
                     // 小型機破壊エフェクト
                     if (this.effectsManager) {
