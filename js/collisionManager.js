@@ -45,10 +45,99 @@ class CollisionManager {
     }
     
     /**
-     * プレイヤー弾と敵の衝突チェック（未実装）
+     * プレイヤー弾と敵の衝突チェック
      */
     checkPlayerBulletsVsEnemies(bulletManager, enemyManager) {
-        // 次のコミットで実装予定
+        if (!bulletManager || !enemyManager) return;
+        if (!bulletManager.activeBullets || !enemyManager.enemies) return;
+        
+        const bulletsToRemove = [];
+        const enemiesToDestroy = [];
+        
+        // 全ての弾について敵との衝突をチェック
+        for (let i = 0; i < bulletManager.activeBullets.length; i++) {
+            const bullet = bulletManager.activeBullets[i];
+            if (!bullet.active) continue;
+            
+            // 画面外チェック（最適化）
+            if (bullet.y < 0) {
+                bulletsToRemove.push(bullet);
+                continue;
+            }
+            
+            const bulletRadius = this.getCollisionRadius(bullet);
+            let bulletHit = false;
+            
+            // 全ての敵について衝突をチェック
+            for (let j = 0; j < enemyManager.enemies.length; j++) {
+                const enemy = enemyManager.enemies[j];
+                if (!enemy.active || enemy.destroyed) continue;
+                
+                const enemyRadius = this.getCollisionRadius(enemy);
+                
+                // 衝突判定
+                if (this.isCircleCollision(bullet, enemy, bulletRadius, enemyRadius)) {
+                    // 敵にダメージを与える
+                    const isDestroyed = enemy.takeDamage(bullet.damage || 1);
+                    
+                    if (isDestroyed) {
+                        enemiesToDestroy.push(enemy);
+                        console.log(`Enemy destroyed by bullet at (${enemy.x.toFixed(0)}, ${enemy.y.toFixed(0)})`);
+                    }
+                    
+                    // 弾を削除対象に追加
+                    bulletsToRemove.push(bullet);
+                    bulletHit = true;
+                    
+                    // デバッグモードで衝突点を記録
+                    if (this.debugMode) {
+                        this.lastCollisionPoint = this.getCollisionPoint(bullet, enemy);
+                        this.lastCollisionPoint.distance = Math.sqrt(
+                            Math.pow(this.lastCollisionPoint.x - (bullet.x + bullet.width/2), 2) +
+                            Math.pow(this.lastCollisionPoint.y - (bullet.y + bullet.height/2), 2)
+                        );
+                        this.lastCollisionPoint.combinedRadius = bulletRadius + enemyRadius;
+                    }
+                    
+                    break; // この弾は1つの敵にしか当たらない
+                }
+            }
+        }
+        
+        // 衝突した弾を削除
+        bulletsToRemove.forEach(bullet => {
+            this.removeBullet(bulletManager, bullet);
+        });
+        
+        // 破壊された敵の処理は敵側で自動的に処理される（takeDamageで既に処理済み）
+        
+        // 衝突があった場合のみログ出力
+        if (bulletsToRemove.length > 0 || enemiesToDestroy.length > 0) {
+            console.log(`Player bullets hit: ${bulletsToRemove.length}, Enemies destroyed: ${enemiesToDestroy.length}`);
+        }
+    }
+    
+    /**
+     * 弾をマネージャーから削除
+     */
+    removeBullet(bulletManager, bullet) {
+        if (!bullet || !bullet.active) return;
+        
+        // 弾を非アクティブにしてプールに戻す
+        bullet.active = false;
+        bullet.pooled = true;
+        
+        // activeBullets配列から削除
+        const index = bulletManager.activeBullets.indexOf(bullet);
+        if (index !== -1) {
+            bulletManager.activeBullets.splice(index, 1);
+        }
+        
+        // プールに戻す
+        if (bulletManager.bulletPool && bulletManager.bulletPool.length < bulletManager.poolSize) {
+            bulletManager.bulletPool.push(bullet);
+            bulletManager.bulletsRecycled++;
+        }
     }
     
     /**
@@ -177,8 +266,8 @@ class CollisionManager {
         }
         
         // プレイヤー弾の当たり判定円を描画
-        if (bulletManager && bulletManager.bullets) {
-            bulletManager.bullets.forEach(bullet => {
+        if (bulletManager && bulletManager.activeBullets) {
+            bulletManager.activeBullets.forEach(bullet => {
                 if (bullet.active) {
                     this.drawHitCircle(ctx, bullet, this.getCollisionRadius(bullet), '#00ffff', 1);
                 }
