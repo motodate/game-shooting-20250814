@@ -55,6 +55,9 @@ class Game {
         // Initialize experience manager
         this.experienceManager = new ExperienceManager();
         
+        // Set up experience callbacks
+        this.setupExperienceCallbacks();
+        
         // Configure collision system
         this.configureCollisions();
         
@@ -351,6 +354,51 @@ class Game {
         });
         
         console.log('Collision system configured with balanced settings');
+    }
+    
+    // Experience system setup
+    setupExperienceCallbacks() {
+        if (!this.experienceManager) return;
+        
+        // レベルアップ時のコールバック
+        this.experienceManager.setOnLevelUp((oldLevel, newLevel) => {
+            console.log(`レベルアップ！Lv.${oldLevel} → Lv.${newLevel}`);
+            
+            // ショットパターンの更新（後で実装）
+            this.updateShotPattern(newLevel);
+            
+            // レベルアップエフェクト（後で実装）
+            this.showLevelUpEffect(newLevel);
+            
+            // UI通知
+            if (window.uiManager) {
+                window.uiManager.showMessage(
+                    `LEVEL UP! ${newLevel}`,
+                    2000,
+                    'var(--neon-green)'
+                );
+            }
+        });
+        
+        // 経験値獲得時のコールバック
+        this.experienceManager.setOnExpGain((amount, currentExp, totalExp) => {
+            // 将来的にここで経験値獲得エフェクトを表示可能
+            console.log(`経験値 +${amount} (現在: ${currentExp})`);
+        });
+    }
+    
+    // ショットパターン更新（後で実装）
+    updateShotPattern(level) {
+        if (!this.bulletManager) return;
+        
+        // 現在はプレースホルダー
+        console.log(`ショットパターンをレベル${level}に更新（未実装）`);
+    }
+    
+    // レベルアップエフェクト表示（後で実装）
+    showLevelUpEffect(level) {
+        // 現在はプレースホルダー
+        console.log(`レベル${level}アップエフェクト表示（未実装）`);
     }
     
     // Game state methods
