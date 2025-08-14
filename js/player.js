@@ -44,6 +44,9 @@ class Player {
         }
         
         console.log('Player initialized at:', this.x, this.y);
+        
+        // 初期UI更新
+        this.updateUI();
     }
     
     update(deltaTime) {

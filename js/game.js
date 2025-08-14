@@ -31,6 +31,9 @@ class Game {
     }
     
     setupGame() {
+        // Initialize player
+        this.player = new Player();
+        
         // Initialize game objects and managers here
         // This will be expanded in later tickets
         
@@ -84,8 +87,12 @@ class Game {
             window.uiManager.update();
         }
         
-        // Update game objects here (will be added in future tickets)
-        // - Player update
+        // Update game objects
+        if (this.player) {
+            this.player.update(deltaTime);
+        }
+        
+        // Future updates will be added in later tickets
         // - Enemy updates
         // - Bullet updates
         // - Collision detection
@@ -100,8 +107,12 @@ class Game {
         window.canvasManager.clear();
         window.canvasManager.drawBackground();
         
-        // Render game objects here (will be added in future tickets)
-        // - Player render
+        // Render game objects
+        if (this.player) {
+            this.player.render(ctx);
+        }
+        
+        // Future renders will be added in later tickets
         // - Enemy renders
         // - Bullet renders
         // - Effect renders
