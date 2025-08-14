@@ -406,10 +406,29 @@ class Game {
         console.log(`ショットパターンをレベル${level}に更新`);
     }
     
-    // レベルアップエフェクト表示（後で実装）
+    // レベルアップエフェクト表示
     showLevelUpEffect(level) {
-        // 現在はプレースホルダー
-        console.log(`レベル${level}アップエフェクト表示（未実装）`);
+        console.log(`レベル${level}アップエフェクト表示`);
+        
+        if (!this.effectsManager) return;
+        
+        // プレイヤー位置でレベルアップエフェクトを作成
+        if (this.player) {
+            const playerCenterX = this.player.x + this.player.width / 2;
+            const playerCenterY = this.player.y + this.player.height / 2;
+            
+            // パーティクルエフェクト
+            this.effectsManager.createLevelUpEffect(playerCenterX, playerCenterY);
+            
+            // スクリーンフラッシュエフェクト
+            this.effectsManager.createScreenFlash('#00ff00');
+        } else {
+            // プレイヤーがいない場合は画面中央
+            const centerX = window.canvasManager ? window.canvasManager.width / 2 : 400;
+            const centerY = window.canvasManager ? window.canvasManager.height / 2 : 300;
+            this.effectsManager.createLevelUpEffect(centerX, centerY);
+            this.effectsManager.createScreenFlash('#00ff00');
+        }
     }
     
     // Game state methods
