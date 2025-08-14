@@ -394,6 +394,7 @@ class Player {
         if (this.lives <= 0) {
             this.alive = false;
             console.log('Player died');
+            this.onLifeChanged();
             return true;
         }
         
@@ -403,6 +404,13 @@ class Player {
         this.blinkTime = 0;
         
         console.log('Player took damage, lives remaining:', this.lives);
+        this.onLifeChanged();
+        
+        // ダメージエフェクトの表示
+        if (window.uiManager) {
+            window.uiManager.showMessage('-1 LIFE', 1000, 'var(--neon-red)');
+        }
+        
         return false;
     }
     
@@ -431,9 +439,40 @@ class Player {
         return {
             alive: this.alive,
             lives: this.lives,
+            maxLives: 3, // 最大ライフ数
             invincible: this.invincible,
+            invincibleTime: this.invincibleTime,
             x: this.x,
             y: this.y
         };
+    }
+    
+    // UIとの連携用ライフ情報更新
+    updateUI() {
+        if (window.uiManager) {
+            // ライフ情報をUIに反映
+            window.uiManager.updatePlayerLives(this.lives, 3);
+        }
+    }
+    
+    // ライフ変更時の追加処理
+    onLifeChanged() {
+        this.updateUI();
+        
+        // ライフが0になったときの処理
+        if (this.lives <= 0 && this.alive) {
+            this.onGameOver();
+        }
+    }
+    
+    onGameOver() {
+        // ゲームオーバー処理
+        console.log('Game Over - Player has no lives remaining');
+        if (window.gameState) {
+            window.gameState.setGameState('gameover');
+        }
+        if (window.uiManager) {
+            window.uiManager.showMessage('GAME OVER', 3000, 'var(--neon-red)');
+        }
     }
 }

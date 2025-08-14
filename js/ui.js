@@ -100,6 +100,32 @@ class UIManager {
         }
     }
     
+    // プレイヤー専用のライフ更新メソッド
+    updatePlayerLives(currentLives, maxLives) {
+        if (this.elements.lives) {
+            const livesContainer = this.elements.lives;
+            livesContainer.innerHTML = '';
+            
+            // プレイヤーのライフアイコンを作成
+            for (let i = 0; i < maxLives; i++) {
+                const lifeIcon = document.createElement('span');
+                lifeIcon.className = 'life-icon';
+                
+                if (i < currentLives) {
+                    lifeIcon.textContent = '❤️';
+                    lifeIcon.style.opacity = '1';
+                    lifeIcon.style.filter = 'drop-shadow(0 0 3px #ff0080)';
+                } else {
+                    lifeIcon.textContent = '💔';
+                    lifeIcon.style.opacity = '0.3';
+                    lifeIcon.style.filter = 'grayscale(100%)';
+                }
+                
+                livesContainer.appendChild(lifeIcon);
+            }
+        }
+    }
+    
     updateGauges() {
         if (!window.gameState) return;
         
