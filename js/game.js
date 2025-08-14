@@ -37,6 +37,9 @@ class Game {
         // Initialize player
         this.player = new Player();
         
+        // Initialize enemy manager
+        this.enemyManager = new EnemyManager();
+        
         // Initialize game objects and managers here
         // This will be expanded in later tickets
         
@@ -103,8 +106,12 @@ class Game {
             this.bulletManager.update(deltaTime);
         }
         
+        // Update enemy manager
+        if (this.enemyManager) {
+            this.enemyManager.update(deltaTime / 1000, performance.now());
+        }
+        
         // Future updates will be added in later tickets
-        // - Enemy updates
         // - Collision detection
     }
     
@@ -127,8 +134,12 @@ class Game {
             this.bulletManager.render(ctx);
         }
         
+        // Render enemies
+        if (this.enemyManager) {
+            this.enemyManager.draw(ctx);
+        }
+        
         // Future renders will be added in later tickets
-        // - Enemy renders
         // - Effect renders
         
         // Render UI
@@ -150,6 +161,12 @@ class Game {
         
         // Add more debug info as needed
         ctx.fillText(`Delta: ${this.deltaTime.toFixed(1)}ms`, window.canvasManager.width - 120, window.canvasManager.height - 40);
+        
+        // Enemy debug info
+        if (this.enemyManager) {
+            const enemyDebug = this.enemyManager.getDebugInfo();
+            ctx.fillText(`Enemies: ${enemyDebug.activeEnemies}/${enemyDebug.maxActiveEnemies}`, window.canvasManager.width - 120, window.canvasManager.height - 60);
+        }
     }
     
     updateFPS(currentTime) {
