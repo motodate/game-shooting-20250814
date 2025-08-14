@@ -141,10 +141,92 @@ class CollisionManager {
     }
     
     /**
-     * 敵弾とプレイヤーの衝突チェック（未実装）
+     * 敵弾とプレイヤーの衝突チェック
      */
     checkEnemyBulletsVsPlayer(enemyBulletManager, player) {
-        // 次のコミットで実装予定
+        if (!enemyBulletManager || !player) return;
+        if (!enemyBulletManager.bullets || !player.alive) return;
+        
+        // 無敵時間中は衝突チェックをスキップ
+        if (player.invincible) return;
+        
+        const bulletsToRemove = [];
+        let playerHit = false;
+        
+        const playerRadius = this.getCollisionRadius(player);
+        
+        // 全ての敵弾について衝突をチェック
+        for (let i = 0; i < enemyBulletManager.bullets.length; i++) {
+            const bullet = enemyBulletManager.bullets[i];
+            if (!bullet.active) continue;
+            
+            // 画面外チェック（最適化）
+            if (bullet.y > window.canvasManager?.height + bullet.height ||
+                bullet.x < -bullet.width ||
+                bullet.x > window.canvasManager?.width + bullet.width) {
+                bulletsToRemove.push(bullet);
+                continue;
+            }
+            
+            const bulletRadius = this.getCollisionRadius(bullet);
+            
+            // プレイヤーとの衝突判定
+            if (this.isCircleCollision(bullet, player, bulletRadius, playerRadius)) {
+                // プレイヤーにダメージを与える
+                const isDead = player.takeDamage();
+                
+                console.log(`Player hit by enemy bullet at (${player.x.toFixed(0)}, ${player.y.toFixed(0)})`);
+                
+                if (isDead) {
+                    console.log('Player died from enemy bullet');
+                }
+                
+                // 敵弾を削除対象に追加
+                bulletsToRemove.push(bullet);
+                playerHit = true;
+                
+                // デバッグモードで衝突点を記録
+                if (this.debugMode) {
+                    this.lastCollisionPoint = this.getCollisionPoint(bullet, player);
+                    this.lastCollisionPoint.distance = Math.sqrt(
+                        Math.pow(this.lastCollisionPoint.x - (bullet.x + bullet.width/2), 2) +
+                        Math.pow(this.lastCollisionPoint.y - (bullet.y + bullet.height/2), 2)
+                    );
+                    this.lastCollisionPoint.combinedRadius = bulletRadius + playerRadius;
+                }
+                
+                // プレイヤーは複数の弾に同時に当たらない（無敵時間があるため）
+                break;
+            }
+        }
+        
+        // 衝突した弾を削除
+        bulletsToRemove.forEach(bullet => {
+            this.removeEnemyBullet(enemyBulletManager, bullet);
+        });
+        
+        // 衝突があった場合のみログ出力
+        if (playerHit || bulletsToRemove.length > 0) {
+            console.log(`Enemy bullets removed: ${bulletsToRemove.length}, Player hit: ${playerHit}`);
+        }
+    }
+    
+    /**
+     * 敵弾をマネージャーから削除
+     */
+    removeEnemyBullet(enemyBulletManager, bullet) {
+        if (!bullet || !bullet.active) return;
+        
+        // 弾を非アクティブにする
+        bullet.active = false;
+        
+        // bullets配列から削除
+        const index = enemyBulletManager.bullets.indexOf(bullet);
+        if (index !== -1) {
+            enemyBulletManager.bullets.splice(index, 1);
+        }
+        
+        // プールに戻す処理は敵弾マネージャー側で管理される
     }
     
     /**
