@@ -43,6 +43,9 @@ class Game {
         // Initialize enemy manager
         this.enemyManager = new EnemyManager();
         
+        // Initialize collision manager
+        this.collisionManager = new CollisionManager();
+        
         // Initialize game objects and managers here
         // This will be expanded in later tickets
         
@@ -123,8 +126,18 @@ class Game {
             this.enemyBulletManager.update(deltaTime, playerX, playerY);
         }
         
+        // Collision detection
+        if (this.collisionManager) {
+            this.collisionManager.checkCollisions(
+                this.player, 
+                this.bulletManager, 
+                this.enemyManager, 
+                this.enemyBulletManager, 
+                deltaTime
+            );
+        }
+        
         // Future updates will be added in later tickets
-        // - Collision detection
     }
     
     render() {
@@ -197,6 +210,12 @@ class Game {
         if (this.enemyBulletManager) {
             const bulletDebug = this.enemyBulletManager.getDebugInfo();
             ctx.fillText(`E-Bullets: ${bulletDebug.activeBullets}/${bulletDebug.maxActiveBullets}`, window.canvasManager.width - 120, window.canvasManager.height - 140);
+        }
+        
+        // Collision debug info
+        if (this.collisionManager) {
+            const collisionDebug = this.collisionManager.getDebugInfo();
+            ctx.fillText(`Collisions: ${collisionDebug.collisionsThisFrame} (${collisionDebug.checksThisFrame} checks)`, window.canvasManager.width - 280, window.canvasManager.height - 20);
         }
     }
     
