@@ -1,10 +1,10 @@
 class Bullet {
     constructor() {
-        // 位置とサイズ
+        // 位置とサイズ（当てやすく調整）
         this.x = 0;
         this.y = 0;
-        this.width = 4;
-        this.height = 12;
+        this.width = 6;
+        this.height = 14;
         
         // 移動関連
         this.vx = 0;

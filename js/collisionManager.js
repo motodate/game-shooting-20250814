@@ -469,21 +469,21 @@ class CollisionManager {
             return obj.hitboxRadius;
         }
         
-        // 敵タイプ別の当たり判定調整
+        // 敵タイプ別の当たり判定調整（初心者向けに甘めに設定）
         if (obj.type) {
             switch (obj.type) {
                 case 'small':
-                    return Math.min(obj.width, obj.height) / 2.5; // 小さめ
+                    return Math.min(obj.width, obj.height) / 1.8; // さらに当てやすく調整
                 case 'medium':
-                    return Math.min(obj.width, obj.height) / 2.2; // 少し小さめ
+                    return Math.min(obj.width, obj.height) / 2.1; // 少し甘く
                 case 'large':
                     return Math.min(obj.width, obj.height) / 2.0; // 標準
             }
         }
         
-        // プレイヤー弾（小さめに調整）
+        // プレイヤー弾（より甘めに調整）
         if (obj.damage !== undefined) {
-            return Math.min(obj.width || 4, obj.height || 12) / 3;
+            return Math.min(obj.width || 6, obj.height || 14) / 2.0; // 大幅に当てやすく
         }
         
         // 敵弾（少し小さめに調整）

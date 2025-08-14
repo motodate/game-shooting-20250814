@@ -93,13 +93,13 @@ class SmallEnemy extends Enemy {
         this.maxHp = 1;
         this.width = 16;
         this.height = 16;
-        this.vy = 0.15; // pixel/ms (150 pixel/second)
+        this.vy = 0.10; // pixel/ms (100 pixel/second) - 追いつきやすく調整
     }
 
     reset() {
         super.reset();
         // SmallEnemy固有の設定を再適用
-        this.vy = 0.15;
+        this.vy = 0.10;
         this.width = 16;
         this.height = 16;
     }

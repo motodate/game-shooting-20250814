@@ -21,10 +21,24 @@ class EnemyBullet {
         // ホーミング用
         this.homingStrength = 0.002;
         this.maxTurnRate = 0.05;
+        this.homingDuration = 2000; // 2秒間のみ追跡
+        this.homingElapsed = 0; // 追跡経過時間
+        this.wasHoming = false; // 元々ホーミング弾だったかの記録
     }
 
     update(deltaTime, playerX = null, playerY = null) {
         if (!this.active) return;
+
+        // ホーミング時間を追跡
+        if (this.wasHoming) {
+            this.homingElapsed += deltaTime;
+            
+            // ホーミング時間が過ぎたら直線弾に変更
+            if (this.homingElapsed >= this.homingDuration && this.type === ENEMY_BULLET_TYPES.HOMING) {
+                this.type = ENEMY_BULLET_TYPES.STRAIGHT;
+                console.log('ホーミング弾が直線弾に切り替わりました');
+            }
+        }
 
         if (this.type === ENEMY_BULLET_TYPES.HOMING && playerX !== null && playerY !== null) {
             this.updateHoming(deltaTime, playerX, playerY);
@@ -72,6 +86,11 @@ class EnemyBullet {
         this.speed = speed;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
+        
+        // ホーミング弾の場合はフラグを立てる
+        if (this.type === ENEMY_BULLET_TYPES.HOMING) {
+            this.wasHoming = true;
+        }
     }
 
     checkBounds() {
@@ -100,6 +119,8 @@ class EnemyBullet {
         this.angle = 0;
         this.speed = 0.1;
         this.createdAt = Date.now();
+        this.homingElapsed = 0;
+        this.wasHoming = false;
     }
 
     getCollisionBox() {
@@ -130,7 +151,12 @@ class EnemyBullet {
         // 弾タイプによって色を変える
         switch (this.type) {
             case ENEMY_BULLET_TYPES.HOMING:
-                ctx.fillStyle = '#ff1177';
+                // ホーミング中は明るい色、直線に変わったら少し暗く
+                ctx.fillStyle = this.wasHoming && this.homingElapsed < this.homingDuration ? '#ff0066' : '#ff1177';
+                if (this.wasHoming && this.homingElapsed < this.homingDuration) {
+                    // ホーミング中はより強い光沢
+                    ctx.shadowBlur = 10;
+                }
                 break;
             case ENEMY_BULLET_TYPES.SPREAD:
                 ctx.fillStyle = '#ff3399';

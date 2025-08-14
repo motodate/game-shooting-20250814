@@ -51,6 +51,7 @@ class EnemyBulletManager {
         const bullet = this.createBullet(x, y, ENEMY_BULLET_TYPES.HOMING);
         if (bullet) {
             bullet.setAngleAndSpeed(angle, speed);
+            bullet.wasHoming = true; // ホーミング弾フラグを設定
         }
         return bullet;
     }
