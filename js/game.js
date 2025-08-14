@@ -55,9 +55,6 @@ class Game {
         // Initialize experience manager
         this.experienceManager = new ExperienceManager();
         
-        // Initialize UI manager
-        this.uiManager = new UIManager();
-        
         // Set up experience callbacks
         this.setupExperienceCallbacks();
         
@@ -120,8 +117,8 @@ class Game {
         }
         
         // Update UI manager
-        if (this.uiManager) {
-            this.uiManager.update(deltaTime);
+        if (window.uiManager) {
+            window.uiManager.update(deltaTime);
         }
         
         // Update game objects
@@ -220,8 +217,9 @@ class Game {
         }
         
         // Render UI
-        if (this.uiManager) {
-            this.uiManager.render(ctx);
+        if (window.uiManager) {
+            window.uiManager.render(ctx);
+            window.uiManager.renderExpAnimations(ctx);
         }
         
         // Debug rendering
@@ -337,11 +335,15 @@ class Game {
         
         // UI notification
         if (window.uiManager) {
-            window.uiManager.showMessage(
-                `DEBUG: ${this.debugMode ? 'ON' : 'OFF'}`, 
-                1000, 
-                this.debugMode ? 'var(--neon-green)' : 'var(--neon-red)'
-            );
+            try {
+                window.uiManager.showMessage(
+                    `DEBUG: ${this.debugMode ? 'ON' : 'OFF'}`, 
+                    1000, 
+                    this.debugMode ? 'var(--neon-green)' : 'var(--neon-red)'
+                );
+            } catch (error) {
+                console.warn('Error showing debug message:', error);
+            }
         }
     }
     
@@ -375,13 +377,12 @@ class Game {
             this.showLevelUpEffect(newLevel);
             
             // UI通知とアニメーション
-            if (this.uiManager) {
-                this.uiManager.showMessage(
-                    `LEVEL UP! ${newLevel}`,
-                    2000,
-                    '#00ff00'
-                );
-                this.uiManager.startLevelUpAnimation(newLevel);
+            if (window.uiManager) {
+                try {
+                    window.uiManager.startLevelUpAnimation(newLevel);
+                } catch (error) {
+                    console.warn('Error triggering level up animation:', error);
+                }
             }
         });
         
@@ -390,10 +391,14 @@ class Game {
             console.log(`経験値 +${amount} (現在: ${currentExp})`);
             
             // 敵の位置で経験値獲得アニメーションを表示
-            if (this.uiManager && enemy) {
-                const enemyX = enemy.x + (enemy.width || 0) / 2;
-                const enemyY = enemy.y + (enemy.height || 0) / 2;
-                this.uiManager.startExpGainAnimation(enemyX, enemyY, amount);
+            if (window.uiManager && enemy) {
+                try {
+                    const enemyX = enemy.x + (enemy.width || 0) / 2;
+                    const enemyY = enemy.y + (enemy.height || 0) / 2;
+                    window.uiManager.startExpGainAnimation(enemyX, enemyY, amount);
+                } catch (error) {
+                    console.warn('Error triggering exp gain animation:', error);
+                }
             }
         });
     }

@@ -334,6 +334,16 @@ class BulletManager {
         
         if (oldLevel !== this.currentLevel) {
             console.log(`BulletManager level changed: ${oldLevel} → ${this.currentLevel}`);
+            
+            // レベルに応じた発射間隔の調整（高レベルほど速く撃てる）
+            const fireRates = {
+                1: 200, // 5発/秒
+                2: 180, // 5.5発/秒
+                3: 160, // 6.25発/秒
+                4: 140, // 7発/秒
+                5: 120  // 8.3発/秒
+            };
+            this.setFireRate(fireRates[this.currentLevel] || 200);
         }
     }
     
