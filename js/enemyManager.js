@@ -41,7 +41,7 @@ class EnemyManager {
     }
 
     spawnRandomEnemy() {
-        const canvas = document.getElementById('game-canvas');
+        const canvas = document.getElementById('gameCanvas');
         if (!canvas) return null;
 
         const margin = 20;
