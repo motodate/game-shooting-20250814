@@ -100,9 +100,128 @@ class Player {
     render(ctx) {
         if (!this.alive || !this.visible) return;
         
-        // 描画処理のプレースホルダー
-        // 次のコミットで実装予定
+        this.renderShip(ctx);
         this.renderDebug(ctx);
+    }
+    
+    renderShip(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        // メインボディ（三角形）
+        this.renderMainBody(ctx);
+        
+        // サイドウィング
+        this.renderWings(ctx);
+        
+        // コアエンジン
+        this.renderCore(ctx);
+        
+        ctx.restore();
+    }
+    
+    renderMainBody(ctx) {
+        // グラデーション作成
+        const gradient = ctx.createLinearGradient(0, -16, 0, 16);
+        gradient.addColorStop(0, '#00ffff');
+        gradient.addColorStop(0.3, '#0099ff');
+        gradient.addColorStop(0.7, '#0066cc');
+        gradient.addColorStop(1, '#003399');
+        
+        // 発光エフェクト
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 15;
+        
+        // メインボディ描画
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(0, -16);      // 上端
+        ctx.lineTo(-8, 12);      // 左下
+        ctx.lineTo(8, 12);       // 右下
+        ctx.closePath();
+        ctx.fill();
+        
+        // アウトライン
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#66ffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+    
+    renderWings(ctx) {
+        // 左ウィング
+        const wingGradient = ctx.createLinearGradient(-12, 0, -6, 0);
+        wingGradient.addColorStop(0, '#ff0088');
+        wingGradient.addColorStop(1, '#ff4499');
+        
+        ctx.shadowColor = '#ff0088';
+        ctx.shadowBlur = 8;
+        
+        ctx.fillStyle = wingGradient;
+        ctx.beginPath();
+        ctx.moveTo(-8, 8);
+        ctx.lineTo(-12, 4);
+        ctx.lineTo(-12, 12);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 右ウィング
+        const wingGradient2 = ctx.createLinearGradient(12, 0, 6, 0);
+        wingGradient2.addColorStop(0, '#ff0088');
+        wingGradient2.addColorStop(1, '#ff4499');
+        
+        ctx.fillStyle = wingGradient2;
+        ctx.beginPath();
+        ctx.moveTo(8, 8);
+        ctx.lineTo(12, 4);
+        ctx.lineTo(12, 12);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+    }
+    
+    renderCore(ctx) {
+        // コアの発光エフェクト
+        ctx.shadowColor = '#ffff00';
+        ctx.shadowBlur = 12;
+        
+        // コア本体
+        ctx.fillStyle = '#ffff00';
+        ctx.beginPath();
+        ctx.arc(0, 4, 3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 内側のハイライト
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 4, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // エンジン排気エフェクト
+        this.renderEngineTrail(ctx);
+    }
+    
+    renderEngineTrail(ctx) {
+        // エンジン排気の描画
+        const trailGradient = ctx.createLinearGradient(0, 12, 0, 20);
+        trailGradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+        trailGradient.addColorStop(0.5, 'rgba(0, 200, 255, 0.4)');
+        trailGradient.addColorStop(1, 'rgba(0, 150, 255, 0)');
+        
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 6;
+        
+        ctx.fillStyle = trailGradient;
+        ctx.beginPath();
+        ctx.moveTo(-2, 12);
+        ctx.lineTo(0, 20);
+        ctx.lineTo(2, 12);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
     }
     
     renderDebug(ctx) {
