@@ -117,8 +117,23 @@ class Player {
     }
     
     updateKeyboardMovement(deltaTime) {
-        // キーボード移動のプレースホルダー
-        // 次のコミットで実装予定
+        if (!window.inputManager) return;
+        
+        const input = window.inputManager;
+        
+        // 移動ベクトルを取得（inputManagerの機能を活用）
+        const movementVector = input.getMovementVector();
+        
+        // キーボード移動の適用
+        if (movementVector.x !== 0 || movementVector.y !== 0) {
+            // デルタタイム基準での移動量計算
+            const deltaSeconds = deltaTime / 1000;
+            const moveDistance = this.keyboardSpeed * deltaSeconds;
+            
+            // 移動の実行
+            this.x += movementVector.x * moveDistance;
+            this.y += movementVector.y * moveDistance;
+        }
     }
     
     constrainToScreen() {
