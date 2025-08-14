@@ -45,6 +45,9 @@ class Game {
         
         // Initialize collision manager
         this.collisionManager = new CollisionManager();
+        if (this.debugMode) {
+            this.collisionManager.setDebugMode(true);
+        }
         
         // Initialize game objects and managers here
         // This will be expanded in later tickets
@@ -171,6 +174,17 @@ class Game {
         
         // Future renders will be added in later tickets
         // - Effect renders
+        
+        // Render collision debug info
+        if (this.collisionManager && this.debugMode) {
+            this.collisionManager.renderDebug(
+                ctx, 
+                this.player, 
+                this.bulletManager, 
+                this.enemyManager, 
+                this.enemyBulletManager
+            );
+        }
         
         // Render UI
         if (window.uiManager) {
