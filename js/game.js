@@ -242,7 +242,7 @@ class Game {
         // Collision debug info
         if (this.collisionManager) {
             const collisionDebug = this.collisionManager.getDebugInfo();
-            ctx.fillText(`Collisions: ${collisionDebug.collisionsThisFrame} (${collisionDebug.checksThisFrame} checks)`, window.canvasManager.width - 280, window.canvasManager.height - 20);
+            ctx.fillText(`Collisions: ${collisionDebug.collisionsThisFrame} (${collisionDebug.checksThisFrame} checks, ${collisionDebug.skippedChecks} skipped)`, window.canvasManager.width - 380, window.canvasManager.height - 20);
         }
         
         // Effects debug info

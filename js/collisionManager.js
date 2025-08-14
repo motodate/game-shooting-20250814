@@ -15,7 +15,16 @@ class CollisionManager {
             checksPerFrame: 0,
             collisionsPerFrame: 0,
             totalChecks: 0,
-            totalCollisions: 0
+            totalCollisions: 0,
+            skippedChecks: 0
+        };
+        
+        // 最適化関連の設定
+        this.optimization = {
+            useScreenBounds: true,
+            earlyReturn: true,
+            maxChecksPerFrame: 1000, // フレーム当たりの最大チェック数
+            spatialOptimization: true
         };
         
         console.log('CollisionManager initialized');
@@ -45,6 +54,11 @@ class CollisionManager {
         // 統計情報を更新
         this.stats.totalChecks += this.stats.checksPerFrame;
         this.stats.totalCollisions += this.stats.collisionsPerFrame;
+        
+        // 最大チェック数に達した場合の警告
+        if (this.stats.checksPerFrame >= this.optimization.maxChecksPerFrame) {
+            console.warn(`Collision checks exceeded maximum per frame: ${this.stats.checksPerFrame}`);
+        }
     }
     
     /**
@@ -60,12 +74,21 @@ class CollisionManager {
         // 全ての弾について敵との衝突をチェック
         for (let i = 0; i < bulletManager.activeBullets.length; i++) {
             const bullet = bulletManager.activeBullets[i];
-            if (!bullet.active) continue;
+            if (!this.isValidForCollision(bullet)) {
+                this.stats.skippedChecks++;
+                continue;
+            }
             
             // 画面外チェック（最適化）
-            if (bullet.y < 0) {
+            if (!this.isInScreenBounds(bullet)) {
                 bulletsToRemove.push(bullet);
+                this.stats.skippedChecks++;
                 continue;
+            }
+            
+            // 最大チェック数の制限
+            if (this.stats.checksPerFrame >= this.optimization.maxChecksPerFrame) {
+                break;
             }
             
             const bulletRadius = this.getCollisionRadius(bullet);
@@ -74,7 +97,22 @@ class CollisionManager {
             // 全ての敵について衝突をチェック
             for (let j = 0; j < enemyManager.enemies.length; j++) {
                 const enemy = enemyManager.enemies[j];
-                if (!enemy.active || enemy.destroyed) continue;
+                if (!this.isValidForCollision(enemy)) {
+                    this.stats.skippedChecks++;
+                    continue;
+                }
+                
+                // 画面外チェック
+                if (!this.isInScreenBounds(enemy)) {
+                    this.stats.skippedChecks++;
+                    continue;
+                }
+                
+                // 大まかな距離チェック
+                if (!this.isRoughlyNear(bullet, enemy, 100)) {
+                    this.stats.skippedChecks++;
+                    continue;
+                }
                 
                 const enemyRadius = this.getCollisionRadius(enemy);
                 
@@ -174,14 +212,27 @@ class CollisionManager {
         // 全ての敵弾について衝突をチェック
         for (let i = 0; i < enemyBulletManager.bullets.length; i++) {
             const bullet = enemyBulletManager.bullets[i];
-            if (!bullet.active) continue;
+            if (!this.isValidForCollision(bullet)) {
+                this.stats.skippedChecks++;
+                continue;
+            }
             
             // 画面外チェック（最適化）
-            if (bullet.y > window.canvasManager?.height + bullet.height ||
-                bullet.x < -bullet.width ||
-                bullet.x > window.canvasManager?.width + bullet.width) {
+            if (!this.isInScreenBounds(bullet)) {
                 bulletsToRemove.push(bullet);
+                this.stats.skippedChecks++;
                 continue;
+            }
+            
+            // 大まかな距離チェック
+            if (!this.isRoughlyNear(bullet, player, 80)) {
+                this.stats.skippedChecks++;
+                continue;
+            }
+            
+            // 最大チェック数の制限
+            if (this.stats.checksPerFrame >= this.optimization.maxChecksPerFrame) {
+                break;
             }
             
             const bulletRadius = this.getCollisionRadius(bullet);
@@ -275,7 +326,27 @@ class CollisionManager {
         // 全ての敵機体について衝突をチェック
         for (let i = 0; i < enemyManager.enemies.length; i++) {
             const enemy = enemyManager.enemies[i];
-            if (!enemy.active || enemy.destroyed) continue;
+            if (!this.isValidForCollision(enemy)) {
+                this.stats.skippedChecks++;
+                continue;
+            }
+            
+            // 画面外チェック
+            if (!this.isInScreenBounds(enemy)) {
+                this.stats.skippedChecks++;
+                continue;
+            }
+            
+            // 大まかな距離チェック
+            if (!this.isRoughlyNear(player, enemy, 120)) {
+                this.stats.skippedChecks++;
+                continue;
+            }
+            
+            // 最大チェック数の制限
+            if (this.stats.checksPerFrame >= this.optimization.maxChecksPerFrame) {
+                break;
+            }
             
             const enemyRadius = this.getCollisionRadius(enemy);
             
@@ -430,8 +501,10 @@ class CollisionManager {
             collisionsThisFrame: this.stats.collisionsPerFrame,
             totalChecks: this.stats.totalChecks,
             totalCollisions: this.stats.totalCollisions,
+            skippedChecks: this.stats.skippedChecks,
             averageChecksPerFrame: this.stats.totalChecks > 0 ? 
-                Math.round(this.stats.totalChecks / 60) : 0
+                Math.round(this.stats.totalChecks / 60) : 0,
+            optimizationEnabled: this.optimization
         };
     }
     
@@ -525,5 +598,73 @@ class CollisionManager {
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]); // 点線をリセット
+    }
+    
+    /**
+     * 画面範囲内チェック（最適化用）
+     */
+    isInScreenBounds(obj, margin = 50) {
+        if (!this.optimization.useScreenBounds || !window.canvasManager) return true;
+        
+        const canvas = window.canvasManager;
+        return (
+            obj.x > -margin &&
+            obj.x < canvas.width + margin &&
+            obj.y > -margin &&
+            obj.y < canvas.height + margin
+        );
+    }
+    
+    /**
+     * オブジェクトがアクティブで有効な状態かチェック
+     */
+    isValidForCollision(obj) {
+        return obj && obj.active && !obj.destroyed;
+    }
+    
+    /**
+     * 大まかな距離チェック（最適化用）
+     * より正確な衝突判定前のふるい分け
+     */
+    isRoughlyNear(obj1, obj2, maxDistance) {
+        if (!this.optimization.earlyReturn) return true;
+        
+        const dx = Math.abs(obj1.x - obj2.x);
+        const dy = Math.abs(obj1.y - obj2.y);
+        
+        // マンハッタン距離での粗い判定
+        return (dx + dy) < maxDistance;
+    }
+    
+    /**
+     * 空間分割による最適化のためのハッシュ計算
+     */
+    getSpatialHash(x, y, gridSize = 64) {
+        if (!this.optimization.spatialOptimization) return 0;
+        
+        const gridX = Math.floor(x / gridSize);
+        const gridY = Math.floor(y / gridSize);
+        return gridX + gridY * 1000; // 簡易ハッシュ
+    }
+    
+    /**
+     * 最適化設定の変更
+     */
+    setOptimization(settings) {
+        Object.assign(this.optimization, settings);
+        console.log('CollisionManager optimization settings updated:', this.optimization);
+    }
+    
+    /**
+     * パフォーマンス統計のリセット
+     */
+    resetStats() {
+        this.stats = {
+            checksPerFrame: 0,
+            collisionsPerFrame: 0,
+            totalChecks: 0,
+            totalCollisions: 0,
+            skippedChecks: 0
+        };
     }
 }
