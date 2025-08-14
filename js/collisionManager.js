@@ -230,10 +230,70 @@ class CollisionManager {
     }
     
     /**
-     * プレイヤーと敵機体の衝突チェック（未実装）
+     * プレイヤーと敵機体の衝突チェック
      */
     checkPlayerVsEnemies(player, enemyManager) {
-        // 次のコミットで実装予定
+        if (!player || !enemyManager) return;
+        if (!enemyManager.enemies || !player.alive) return;
+        
+        // 無敵時間中は衝突チェックをスキップ
+        if (player.invincible) return;
+        
+        const enemiesToDestroy = [];
+        let playerHit = false;
+        
+        const playerRadius = this.getCollisionRadius(player);
+        
+        // 全ての敵機体について衝突をチェック
+        for (let i = 0; i < enemyManager.enemies.length; i++) {
+            const enemy = enemyManager.enemies[i];
+            if (!enemy.active || enemy.destroyed) continue;
+            
+            const enemyRadius = this.getCollisionRadius(enemy);
+            
+            // プレイヤーとの衝突判定
+            if (this.isCircleCollision(player, enemy, playerRadius, enemyRadius)) {
+                // プレイヤーにダメージを与える（接触ダメージ）
+                const isDead = player.takeDamage();
+                
+                console.log(`Player collided with ${enemy.type} enemy at (${enemy.x.toFixed(0)}, ${enemy.y.toFixed(0)})`);
+                
+                if (isDead) {
+                    console.log('Player died from enemy collision');
+                }
+                
+                playerHit = true;
+                
+                // 敵の種類に応じた処理
+                if (enemy.type === 'small') {
+                    // 小型機は即座に破壊
+                    enemy.destroy();
+                    enemiesToDestroy.push(enemy);
+                    console.log('Small enemy destroyed by collision');
+                } else {
+                    // 中型・大型機はダメージのみ（接触してもそのまま残る）
+                    console.log(`${enemy.type} enemy collision - no destruction`);
+                }
+                
+                // デバッグモードで衝突点を記録
+                if (this.debugMode) {
+                    this.lastCollisionPoint = this.getCollisionPoint(player, enemy);
+                    this.lastCollisionPoint.distance = Math.sqrt(
+                        Math.pow(this.lastCollisionPoint.x - (player.x + player.width/2), 2) +
+                        Math.pow(this.lastCollisionPoint.y - (player.y + player.height/2), 2)
+                    );
+                    this.lastCollisionPoint.combinedRadius = playerRadius + enemyRadius;
+                }
+                
+                // プレイヤーは複数の敵に同時に当たらない（無敵時間があるため）
+                break;
+            }
+        }
+        
+        // 衝突があった場合のみログ出力
+        if (playerHit || enemiesToDestroy.length > 0) {
+            console.log(`Player-enemy collision: ${enemiesToDestroy.length} small enemies destroyed, Player hit: ${playerHit}`);
+        }
     }
     
     /**
