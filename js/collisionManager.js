@@ -461,20 +461,43 @@ class CollisionManager {
     
     /**
      * オブジェクトの適切な衝突半径を取得
+     * バランス調整のために各オブジェクトタイプごとに調整
      */
     getCollisionRadius(obj) {
-        // プレイヤーの場合はhitboxRadiusを優先
+        // プレイヤーの場合はhitboxRadiusを優先（調整済み）
         if (obj.hitboxRadius !== undefined) {
             return obj.hitboxRadius;
         }
         
-        // その他のオブジェクトは幅と高さの平均値の半分を使用
+        // 敵タイプ別の当たり判定調整
+        if (obj.type) {
+            switch (obj.type) {
+                case 'small':
+                    return Math.min(obj.width, obj.height) / 2.5; // 小さめ
+                case 'medium':
+                    return Math.min(obj.width, obj.height) / 2.2; // 少し小さめ
+                case 'large':
+                    return Math.min(obj.width, obj.height) / 2.0; // 標準
+            }
+        }
+        
+        // プレイヤー弾（小さめに調整）
+        if (obj.damage !== undefined) {
+            return Math.min(obj.width || 4, obj.height || 12) / 3;
+        }
+        
+        // 敵弾（少し小さめに調整）
+        if (obj.vx !== undefined && obj.vy !== undefined) {
+            return Math.min(obj.width || 6, obj.height || 6) / 2.2;
+        }
+        
+        // その他のオブジェクトは標準
         if (obj.width !== undefined && obj.height !== undefined) {
             return Math.min(obj.width, obj.height) / 2;
         }
         
         // デフォルト値
-        return 8;
+        return 6;
     }
     
     /**

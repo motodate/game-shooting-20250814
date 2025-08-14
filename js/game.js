@@ -52,6 +52,9 @@ class Game {
         // Initialize effects manager
         this.effectsManager = new EffectsManager();
         
+        // Configure collision system
+        this.configureCollisions();
+        
         // Initialize game objects and managers here
         // This will be expanded in later tickets
         
@@ -99,6 +102,12 @@ class Game {
         
         if (window.inputManager) {
             window.inputManager.update();
+            
+            // デバッグモード切り替え（Dキーで切り替え）
+            if (window.inputManager.isActionJustPressed && 
+                window.inputManager.isActionJustPressed('debug')) {
+                this.toggleDebugMode();
+            }
         }
         
         if (window.uiManager) {
@@ -250,6 +259,12 @@ class Game {
             const effectsDebug = this.effectsManager.getDebugInfo();
             ctx.fillText(`Effects: ${effectsDebug.activeEffects}/${effectsDebug.totalEffectsInUse}`, window.canvasManager.width - 120, window.canvasManager.height - 160);
         }
+        
+        // Collision system status
+        if (this.collisionManager) {
+            const optimizationInfo = this.collisionManager.getDebugInfo().optimizationEnabled;
+            ctx.fillText(`Collision optimized: ${optimizationInfo.useScreenBounds ? 'ON' : 'OFF'}`, window.canvasManager.width - 200, window.canvasManager.height - 180);
+        }
     }
     
     updateFPS(currentTime) {
@@ -293,6 +308,41 @@ class Game {
         }
     }
 
+    // Debug methods
+    toggleDebugMode() {
+        this.debugMode = !this.debugMode;
+        
+        if (this.collisionManager) {
+            this.collisionManager.setDebugMode(this.debugMode);
+        }
+        
+        console.log(`Debug mode: ${this.debugMode ? 'ON' : 'OFF'}`);
+        
+        // UI notification
+        if (window.uiManager) {
+            window.uiManager.showMessage(
+                `DEBUG: ${this.debugMode ? 'ON' : 'OFF'}`, 
+                1000, 
+                this.debugMode ? 'var(--neon-green)' : 'var(--neon-red)'
+            );
+        }
+    }
+    
+    // Collision system configuration
+    configureCollisions() {
+        if (!this.collisionManager) return;
+        
+        // デフォルトの衝突システム設定
+        this.collisionManager.setOptimization({
+            useScreenBounds: true,
+            earlyReturn: true,
+            maxChecksPerFrame: 500, // 調整されたフレーム当たりの最大チェック数
+            spatialOptimization: true
+        });
+        
+        console.log('Collision system configured with balanced settings');
+    }
+    
     // Game state methods
     pause() {
         // Will be implemented with GameState manager
