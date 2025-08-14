@@ -75,8 +75,50 @@ class Player {
     }
     
     updateMovement(deltaTime) {
-        // 移動処理のプレースホルダー
-        // 後のコミットで実装予定
+        // タッチ/マウス追従移動
+        this.updatePointerFollowing(deltaTime);
+        
+        // キーボード移動（次のコミットで実装）
+        this.updateKeyboardMovement(deltaTime);
+    }
+    
+    updatePointerFollowing(deltaTime) {
+        if (!window.inputManager) return;
+        
+        const input = window.inputManager;
+        
+        // タッチ/マウスが押されているかチェック
+        if (input.isPointerDown()) {
+            const pointerPos = input.getPointerPosition();
+            this.targetX = pointerPos.x;
+            this.targetY = pointerPos.y;
+            this.followingPointer = true;
+        } else {
+            this.followingPointer = false;
+        }
+        
+        // 追従移動の実行
+        if (this.followingPointer) {
+            const dx = this.targetX - this.x;
+            const dy = this.targetY - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // 目標地点に十分近ければ移動を停止
+            if (distance > 5) {
+                const normalizedDx = dx / distance;
+                const normalizedDy = dy / distance;
+                
+                // スムーズな追従移動
+                const moveSpeed = this.followSpeed * (deltaTime / 16.67); // 60FPS基準で正規化
+                this.x += normalizedDx * moveSpeed;
+                this.y += normalizedDy * moveSpeed;
+            }
+        }
+    }
+    
+    updateKeyboardMovement(deltaTime) {
+        // キーボード移動のプレースホルダー
+        // 次のコミットで実装予定
     }
     
     constrainToScreen() {
