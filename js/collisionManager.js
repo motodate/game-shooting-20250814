@@ -25,7 +25,7 @@ class CollisionManager {
      * メインの衝突チェックループ
      * 全ての衝突タイプをチェックする
      */
-    checkCollisions(player, bulletManager, enemyManager, enemyBulletManager, deltaTime) {
+    checkCollisions(player, bulletManager, enemyManager, enemyBulletManager, deltaTime, effectsManager = null) {
         // フレームの開始時に統計をリセット
         this.stats.checksPerFrame = 0;
         this.stats.collisionsPerFrame = 0;
@@ -33,6 +33,9 @@ class CollisionManager {
         if (!player || !bulletManager || !enemyManager || !enemyBulletManager) {
             return;
         }
+        
+        // エフェクトマネージャーを保存（各衝突チェックメソッドで使用）
+        this.effectsManager = effectsManager;
         
         // 各種衝突チェック
         this.checkPlayerBulletsVsEnemies(bulletManager, enemyManager);
@@ -77,12 +80,25 @@ class CollisionManager {
                 
                 // 衝突判定
                 if (this.isCircleCollision(bullet, enemy, bulletRadius, enemyRadius)) {
+                    // 衝突座標を取得
+                    const collisionPoint = this.getCollisionPoint(bullet, enemy);
+                    
                     // 敵にダメージを与える
                     const isDestroyed = enemy.takeDamage(bullet.damage || 1);
                     
                     if (isDestroyed) {
                         enemiesToDestroy.push(enemy);
                         console.log(`Enemy destroyed by bullet at (${enemy.x.toFixed(0)}, ${enemy.y.toFixed(0)})`);
+                        
+                        // 爆発エフェクトを生成
+                        if (this.effectsManager) {
+                            this.effectsManager.createExplosion(collisionPoint.x, collisionPoint.y);
+                        }
+                    } else {
+                        // ダメージエフェクトを生成
+                        if (this.effectsManager) {
+                            this.effectsManager.createDamageEffect(collisionPoint.x, collisionPoint.y);
+                        }
                     }
                     
                     // 弾を削除対象に追加
@@ -172,6 +188,9 @@ class CollisionManager {
             
             // プレイヤーとの衝突判定
             if (this.isCircleCollision(bullet, player, bulletRadius, playerRadius)) {
+                // 衝突座標を取得
+                const collisionPoint = this.getCollisionPoint(bullet, player);
+                
                 // プレイヤーにダメージを与える
                 const isDead = player.takeDamage();
                 
@@ -179,6 +198,15 @@ class CollisionManager {
                 
                 if (isDead) {
                     console.log('Player died from enemy bullet');
+                    // プレイヤー死亡時の爆発エフェクト
+                    if (this.effectsManager) {
+                        this.effectsManager.createExplosion(collisionPoint.x, collisionPoint.y);
+                    }
+                } else {
+                    // プレイヤーダメージエフェクト
+                    if (this.effectsManager) {
+                        this.effectsManager.createDamageEffect(collisionPoint.x, collisionPoint.y);
+                    }
                 }
                 
                 // 敵弾を削除対象に追加
@@ -253,6 +281,9 @@ class CollisionManager {
             
             // プレイヤーとの衝突判定
             if (this.isCircleCollision(player, enemy, playerRadius, enemyRadius)) {
+                // 衝突座標を取得
+                const collisionPoint = this.getCollisionPoint(player, enemy);
+                
                 // プレイヤーにダメージを与える（接触ダメージ）
                 const isDead = player.takeDamage();
                 
@@ -260,6 +291,15 @@ class CollisionManager {
                 
                 if (isDead) {
                     console.log('Player died from enemy collision');
+                    // プレイヤー死亡時の爆発エフェクト
+                    if (this.effectsManager) {
+                        this.effectsManager.createExplosion(collisionPoint.x, collisionPoint.y);
+                    }
+                } else {
+                    // プレイヤーダメージエフェクト
+                    if (this.effectsManager) {
+                        this.effectsManager.createDamageEffect(collisionPoint.x, collisionPoint.y);
+                    }
                 }
                 
                 playerHit = true;
@@ -270,9 +310,19 @@ class CollisionManager {
                     enemy.destroy();
                     enemiesToDestroy.push(enemy);
                     console.log('Small enemy destroyed by collision');
+                    
+                    // 小型機破壊エフェクト
+                    if (this.effectsManager) {
+                        this.effectsManager.createExplosion(collisionPoint.x, collisionPoint.y);
+                    }
                 } else {
                     // 中型・大型機はダメージのみ（接触してもそのまま残る）
                     console.log(`${enemy.type} enemy collision - no destruction`);
+                    
+                    // パーティクルエフェクト
+                    if (this.effectsManager) {
+                        this.effectsManager.createParticleEffect(collisionPoint.x, collisionPoint.y);
+                    }
                 }
                 
                 // デバッグモードで衝突点を記録

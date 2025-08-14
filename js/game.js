@@ -49,6 +49,9 @@ class Game {
             this.collisionManager.setDebugMode(true);
         }
         
+        // Initialize effects manager
+        this.effectsManager = new EffectsManager();
+        
         // Initialize game objects and managers here
         // This will be expanded in later tickets
         
@@ -136,8 +139,14 @@ class Game {
                 this.bulletManager, 
                 this.enemyManager, 
                 this.enemyBulletManager, 
-                deltaTime
+                deltaTime,
+                this.effectsManager
             );
+        }
+        
+        // Update effects
+        if (this.effectsManager) {
+            this.effectsManager.update(deltaTime);
         }
         
         // Future updates will be added in later tickets
@@ -172,8 +181,12 @@ class Game {
             this.enemyBulletManager.render(ctx);
         }
         
+        // Render effects
+        if (this.effectsManager) {
+            this.effectsManager.render(ctx);
+        }
+        
         // Future renders will be added in later tickets
-        // - Effect renders
         
         // Render collision debug info
         if (this.collisionManager && this.debugMode) {
@@ -230,6 +243,12 @@ class Game {
         if (this.collisionManager) {
             const collisionDebug = this.collisionManager.getDebugInfo();
             ctx.fillText(`Collisions: ${collisionDebug.collisionsThisFrame} (${collisionDebug.checksThisFrame} checks)`, window.canvasManager.width - 280, window.canvasManager.height - 20);
+        }
+        
+        // Effects debug info
+        if (this.effectsManager) {
+            const effectsDebug = this.effectsManager.getDebugInfo();
+            ctx.fillText(`Effects: ${effectsDebug.activeEffects}/${effectsDebug.totalEffectsInUse}`, window.canvasManager.width - 120, window.canvasManager.height - 160);
         }
     }
     
