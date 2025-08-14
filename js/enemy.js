@@ -30,8 +30,8 @@ class Enemy {
     }
 
     checkBounds() {
-        const canvas = document.getElementById('gameCanvas');
-        if (this.y > canvas.height + this.height) {
+        const canvas = document.getElementById('game-canvas');
+        if (canvas && this.y > canvas.height + this.height) {
             this.destroy();
         }
     }
