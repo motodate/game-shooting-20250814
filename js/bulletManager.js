@@ -15,6 +15,10 @@ class BulletManager {
         this.totalBulletsFired = 0;
         this.bulletsRecycled = 0;
         
+        // レベル関連
+        this.currentLevel = 1;
+        this.shotPatterns = this.setupShotPatterns();
+        
         this.init();
     }
     
@@ -22,6 +26,45 @@ class BulletManager {
         // オブジェクトプールを初期化
         this.createBulletPool();
         console.log(`BulletManager initialized with pool size: ${this.poolSize}`);
+    }
+    
+    // ショットパターンの設定
+    setupShotPatterns() {
+        return {
+            1: { // Lv1: 前方に1発
+                bullets: [
+                    { offsetX: 0, offsetY: -10, vx: 0, vy: -400 }
+                ]
+            },
+            2: { // Lv2: 前方に2発を並行発射
+                bullets: [
+                    { offsetX: -6, offsetY: -10, vx: 0, vy: -400 },
+                    { offsetX: 6, offsetY: -10, vx: 0, vy: -400 }
+                ]
+            },
+            3: { // Lv3: 前方に3発を扇状発射
+                bullets: [
+                    { offsetX: 0, offsetY: -10, vx: 0, vy: -400 },           // 中央
+                    { offsetX: -8, offsetY: -10, vx: -60, vy: -400 },       // 左斜め
+                    { offsetX: 8, offsetY: -10, vx: 60, vy: -400 }          // 右斜め
+                ]
+            },
+            4: { // Lv4: Lv3の弾を大型化（サイズ1.5倍、速度向上）
+                bullets: [
+                    { offsetX: 0, offsetY: -10, vx: 0, vy: -450, size: 1.5 },
+                    { offsetX: -8, offsetY: -10, vx: -70, vy: -450, size: 1.5 },
+                    { offsetX: 8, offsetY: -10, vx: 70, vy: -450, size: 1.5 }
+                ]
+            },
+            5: { // Lv5: Lv4 + 後方に1発追加
+                bullets: [
+                    { offsetX: 0, offsetY: -10, vx: 0, vy: -450, size: 1.5 },    // 前方中央
+                    { offsetX: -8, offsetY: -10, vx: -70, vy: -450, size: 1.5 },  // 前方左
+                    { offsetX: 8, offsetY: -10, vx: 70, vy: -450, size: 1.5 },   // 前方右
+                    { offsetX: 0, offsetY: 10, vx: 0, vy: 300, size: 1.2 }       // 後方
+                ]
+            }
+        };
     }
     
     // オブジェクトプールの作成
@@ -111,8 +154,51 @@ class BulletManager {
     updateAutoFire(x, y) {
         if (!this.autoFiring) return;
         
-        // プレイヤーの位置から弾を発射
-        this.fireBullet(x, y - 10); // プレイヤーの少し上から発射
+        // レベル別ショットパターンで発射
+        this.fireByPattern(x, y);
+    }
+    
+    // レベル別パターン発射
+    fireByPattern(x, y) {
+        const pattern = this.shotPatterns[this.currentLevel];
+        if (!pattern || pattern.bullets.length === 0) {
+            // フォールバック: レベル1パターン
+            this.fireBullet(x, y - 10);
+            return;
+        }
+        
+        const currentTime = Date.now();
+        
+        // 発射間隔チェック
+        if (currentTime - this.lastFireTime < this.fireRate) {
+            return;
+        }
+        
+        // パターンに従って複数弾を発射
+        let firedCount = 0;
+        pattern.bullets.forEach(bulletData => {
+            const bullet = this.getBulletFromPool();
+            if (bullet) {
+                const fireX = x + bulletData.offsetX;
+                const fireY = y + bulletData.offsetY;
+                bullet.init(fireX, fireY, bulletData.vx, bulletData.vy);
+                
+                // サイズ調整（Lv4以上）
+                if (bulletData.size && bulletData.size > 1) {
+                    bullet.width = Math.round(bullet.width * bulletData.size);
+                    bullet.height = Math.round(bullet.height * bulletData.size);
+                }
+                
+                this.activeBullets.push(bullet);
+                firedCount++;
+            }
+        });
+        
+        if (firedCount > 0) {
+            this.lastFireTime = currentTime;
+            this.totalBulletsFired += firedCount;
+            console.log(`Level ${this.currentLevel} pattern fired: ${firedCount} bullets`);
+        }
     }
     
     // 弾の更新処理
@@ -239,5 +325,30 @@ class BulletManager {
         if (settings.poolSize !== undefined) {
             this.poolSize = Math.max(50, settings.poolSize);
         }
+    }
+    
+    // レベル設定
+    setLevel(level) {
+        const oldLevel = this.currentLevel;
+        this.currentLevel = Math.max(1, Math.min(5, level));
+        
+        if (oldLevel !== this.currentLevel) {
+            console.log(`BulletManager level changed: ${oldLevel} → ${this.currentLevel}`);
+            
+            // レベルに応じた発射間隔の調整（高レベルほど速く撃てる）
+            const fireRates = {
+                1: 200, // 5発/秒
+                2: 180, // 5.5発/秒
+                3: 160, // 6.25発/秒
+                4: 140, // 7発/秒
+                5: 120  // 8.3発/秒
+            };
+            this.setFireRate(fireRates[this.currentLevel] || 200);
+        }
+    }
+    
+    // 現在のレベル取得
+    getLevel() {
+        return this.currentLevel;
     }
 }

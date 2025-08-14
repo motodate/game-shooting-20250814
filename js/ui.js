@@ -14,6 +14,14 @@ class UIManager {
         this.scoreAnimation = 0;
         this.levelUpAnimation = 0;
         
+        // Experience system animations
+        this.expGainAnimations = [];
+        this.levelUpEffectAnimation = {
+            active: false,
+            duration: 2000,
+            startTime: 0
+        };
+        
         this.init();
     }
     
@@ -61,18 +69,24 @@ class UIManager {
     }
     
     updateLevel() {
-        if (this.elements.level && window.gameState) {
-            this.elements.level.textContent = `LEVEL: ${window.gameState.level}`;
-            
-            // Level up animation
-            if (this.levelUpAnimation > 0) {
-                this.levelUpAnimation -= 2;
-                const intensity = this.levelUpAnimation / 30;
-                this.elements.level.style.color = `rgba(255, 255, 0, ${intensity})`;
-                this.elements.level.style.textShadow = `0 0 ${20 * intensity}px var(--neon-yellow)`;
-            } else {
-                this.elements.level.style.color = 'var(--neon-cyan)';
-                this.elements.level.style.textShadow = '0 0 10px var(--neon-cyan)';
+        if (this.elements.level && window.game?.experienceManager) {
+            try {
+                const currentLevel = window.game.experienceManager.currentLevel;
+                this.elements.level.textContent = `LEVEL: ${currentLevel}`;
+                
+                // Level up animation
+                if (this.levelUpAnimation > 0) {
+                    this.levelUpAnimation -= 2;
+                    const intensity = this.levelUpAnimation / 30;
+                    this.elements.level.style.color = `rgba(255, 255, 0, ${intensity})`;
+                    this.elements.level.style.textShadow = `0 0 ${20 * intensity}px var(--neon-yellow)`;
+                } else {
+                    this.elements.level.style.color = 'var(--neon-cyan)';
+                    this.elements.level.style.textShadow = '0 0 10px var(--neon-cyan)';
+                }
+            } catch (error) {
+                console.warn('Error updating level:', error);
+                this.elements.level.textContent = 'LEVEL: 1';
             }
         }
     }
@@ -127,36 +141,51 @@ class UIManager {
     }
     
     updateGauges() {
-        if (!window.gameState) return;
-        
         // Experience gauge
-        if (this.elements.expGauge) {
-            const expPercent = window.gameState.getExperiencePercentage();
-            this.elements.expGauge.style.width = `${expPercent}%`;
-            
-            // Full gauge glow effect
-            if (expPercent >= 100) {
-                this.elements.expGauge.style.boxShadow = '0 0 20px var(--neon-yellow)';
-            } else {
-                this.elements.expGauge.style.boxShadow = '0 0 10px currentColor';
+        if (this.elements.expGauge && window.game?.experienceManager) {
+            try {
+                const expManager = window.game.experienceManager;
+                const expProgress = expManager.getExpProgress();
+                const expPercent = Math.floor(expProgress * 100);
+                
+                this.elements.expGauge.style.width = `${expPercent}%`;
+                
+                // Full gauge glow effect
+                if (expPercent >= 100) {
+                    this.elements.expGauge.style.boxShadow = '0 0 20px var(--neon-yellow)';
+                } else {
+                    this.elements.expGauge.style.boxShadow = '0 0 10px currentColor';
+                }
+            } catch (error) {
+                console.warn('Error updating experience gauge:', error);
             }
         }
         
         // Time slow gauge
-        if (this.elements.timeSlowGauge) {
-            const timeSlowPercent = window.gameState.getTimeSlowPercentage();
-            this.elements.timeSlowGauge.style.width = `${timeSlowPercent}%`;
-            
-            // Change color based on state
-            if (window.gameState.isTimeSlowActive) {
-                this.elements.timeSlowGauge.style.background = 
-                    'linear-gradient(90deg, var(--neon-red), var(--neon-yellow))';
-                this.elements.timeSlowGauge.style.boxShadow = '0 0 15px var(--neon-red)';
-            } else if (timeSlowPercent >= 100) {
-                this.elements.timeSlowGauge.style.background = 
-                    'linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta))';
-                this.elements.timeSlowGauge.style.boxShadow = '0 0 20px var(--neon-cyan)';
-            } else {
+        if (this.elements.timeSlowGauge && window.gameState) {
+            try {
+                const timeSlowPercent = window.gameState.getTimeSlowPercentage ? 
+                    window.gameState.getTimeSlowPercentage() : 0;
+                this.elements.timeSlowGauge.style.width = `${timeSlowPercent}%`;
+                
+                // Change color based on state
+                if (window.gameState.isTimeSlowActive) {
+                    this.elements.timeSlowGauge.style.background = 
+                        'linear-gradient(90deg, var(--neon-red), var(--neon-yellow))';
+                    this.elements.timeSlowGauge.style.boxShadow = '0 0 15px var(--neon-red)';
+                } else if (timeSlowPercent >= 100) {
+                    this.elements.timeSlowGauge.style.background = 
+                        'linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta))';
+                    this.elements.timeSlowGauge.style.boxShadow = '0 0 20px var(--neon-cyan)';
+                } else {
+                    this.elements.timeSlowGauge.style.background = 
+                        'linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta))';
+                    this.elements.timeSlowGauge.style.boxShadow = '0 0 10px currentColor';
+                }
+            } catch (error) {
+                console.warn('Error updating time slow gauge:', error);
+                // Set default appearance on error
+                this.elements.timeSlowGauge.style.width = '0%';
                 this.elements.timeSlowGauge.style.background = 
                     'linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta))';
                 this.elements.timeSlowGauge.style.boxShadow = '0 0 10px currentColor';
@@ -293,6 +322,97 @@ class UIManager {
         if (this.levelUpAnimation > 0) {
             this.levelUpAnimation--;
         }
+        
+        // Update experience animations
+        this.updateExpGainAnimations();
+        this.updateLevelUpEffectAnimation();
+    }
+    
+    // Experience system methods
+    startLevelUpAnimation(level) {
+        this.levelUpAnimation = 60; // フレーム数
+        this.levelUpEffectAnimation = {
+            active: true,
+            level: level,
+            duration: 2000,
+            startTime: Date.now()
+        };
+        
+        // Show level up message
+        this.showMessage(`LEVEL UP! ${level}`, 2000, 'var(--neon-green)');
+        console.log(`Level up animation started for level ${level}`);
+    }
+    
+    startExpGainAnimation(x, y, amount) {
+        const animation = {
+            id: Date.now() + Math.random(),
+            x: x,
+            y: y,
+            amount: amount,
+            startTime: Date.now(),
+            duration: 1500,
+            opacity: 1
+        };
+        
+        this.expGainAnimations.push(animation);
+        
+        // Limit number of animations
+        if (this.expGainAnimations.length > 10) {
+            this.expGainAnimations.shift();
+        }
+    }
+    
+    updateExpGainAnimations() {
+        for (let i = this.expGainAnimations.length - 1; i >= 0; i--) {
+            const animation = this.expGainAnimations[i];
+            const elapsed = Date.now() - animation.startTime;
+            const progress = elapsed / animation.duration;
+            
+            if (progress >= 1) {
+                this.expGainAnimations.splice(i, 1);
+                continue;
+            }
+            
+            // Update animation properties
+            animation.opacity = 1 - progress;
+        }
+    }
+    
+    updateLevelUpEffectAnimation() {
+        if (!this.levelUpEffectAnimation.active) return;
+        
+        const elapsed = Date.now() - this.levelUpEffectAnimation.startTime;
+        if (elapsed >= this.levelUpEffectAnimation.duration) {
+            this.levelUpEffectAnimation.active = false;
+        }
+    }
+    
+    // Canvas rendering for experience animations
+    renderExpAnimations(ctx) {
+        if (!ctx || this.expGainAnimations.length === 0) return;
+        
+        ctx.save();
+        
+        this.expGainAnimations.forEach(animation => {
+            if (animation.opacity <= 0) return;
+            
+            ctx.globalAlpha = animation.opacity;
+            ctx.fillStyle = '#ffff00';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            
+            // Shadow effect
+            ctx.shadowColor = '#ffff00';
+            ctx.shadowBlur = 8;
+            
+            const elapsed = Date.now() - animation.startTime;
+            const progress = elapsed / animation.duration;
+            const offsetY = progress * 40; // Move up
+            
+            ctx.fillText(`+${animation.amount} EXP`, animation.x, animation.y - offsetY);
+        });
+        
+        ctx.restore();
     }
 }
 

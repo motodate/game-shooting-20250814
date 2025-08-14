@@ -52,6 +52,12 @@ class Game {
         // Initialize effects manager
         this.effectsManager = new EffectsManager();
         
+        // Initialize experience manager
+        this.experienceManager = new ExperienceManager();
+        
+        // Set up experience callbacks
+        this.setupExperienceCallbacks();
+        
         // Configure collision system
         this.configureCollisions();
         
@@ -110,8 +116,9 @@ class Game {
             }
         }
         
+        // Update UI manager
         if (window.uiManager) {
-            window.uiManager.update();
+            window.uiManager.update(deltaTime);
         }
         
         // Update game objects
@@ -149,7 +156,8 @@ class Game {
                 this.enemyManager, 
                 this.enemyBulletManager, 
                 deltaTime,
-                this.effectsManager
+                this.effectsManager,
+                this.experienceManager
             );
         }
         
@@ -211,6 +219,7 @@ class Game {
         // Render UI
         if (window.uiManager) {
             window.uiManager.render(ctx);
+            window.uiManager.renderExpAnimations(ctx);
         }
         
         // Debug rendering
@@ -264,6 +273,12 @@ class Game {
         if (this.collisionManager) {
             const optimizationInfo = this.collisionManager.getDebugInfo().optimizationEnabled;
             ctx.fillText(`Collision optimized: ${optimizationInfo.useScreenBounds ? 'ON' : 'OFF'}`, window.canvasManager.width - 200, window.canvasManager.height - 180);
+        }
+        
+        // Experience debug info
+        if (this.experienceManager) {
+            const expDebug = this.experienceManager.getDebugInfo();
+            ctx.fillText(`Level: ${expDebug.level} (${expDebug.currentExp}/${expDebug.expToNext}) ${expDebug.progress}%`, window.canvasManager.width - 250, window.canvasManager.height - 200);
         }
     }
     
@@ -320,11 +335,15 @@ class Game {
         
         // UI notification
         if (window.uiManager) {
-            window.uiManager.showMessage(
-                `DEBUG: ${this.debugMode ? 'ON' : 'OFF'}`, 
-                1000, 
-                this.debugMode ? 'var(--neon-green)' : 'var(--neon-red)'
-            );
+            try {
+                window.uiManager.showMessage(
+                    `DEBUG: ${this.debugMode ? 'ON' : 'OFF'}`, 
+                    1000, 
+                    this.debugMode ? 'var(--neon-green)' : 'var(--neon-red)'
+                );
+            } catch (error) {
+                console.warn('Error showing debug message:', error);
+            }
         }
     }
     
@@ -341,6 +360,80 @@ class Game {
         });
         
         console.log('Collision system configured with balanced settings');
+    }
+    
+    // Experience system setup
+    setupExperienceCallbacks() {
+        if (!this.experienceManager) return;
+        
+        // レベルアップ時のコールバック
+        this.experienceManager.setOnLevelUp((oldLevel, newLevel) => {
+            console.log(`レベルアップ！Lv.${oldLevel} → Lv.${newLevel}`);
+            
+            // ショットパターンの更新
+            this.updateShotPattern(newLevel);
+            
+            // レベルアップエフェクト
+            this.showLevelUpEffect(newLevel);
+            
+            // UI通知とアニメーション
+            if (window.uiManager) {
+                try {
+                    window.uiManager.startLevelUpAnimation(newLevel);
+                } catch (error) {
+                    console.warn('Error triggering level up animation:', error);
+                }
+            }
+        });
+        
+        // 経験値獲得時のコールバック
+        this.experienceManager.setOnExpGain((amount, currentExp, totalExp, enemy) => {
+            console.log(`経験値 +${amount} (現在: ${currentExp})`);
+            
+            // 敵の位置で経験値獲得アニメーションを表示
+            if (window.uiManager && enemy) {
+                try {
+                    const enemyX = enemy.x + (enemy.width || 0) / 2;
+                    const enemyY = enemy.y + (enemy.height || 0) / 2;
+                    window.uiManager.startExpGainAnimation(enemyX, enemyY, amount);
+                } catch (error) {
+                    console.warn('Error triggering exp gain animation:', error);
+                }
+            }
+        });
+    }
+    
+    // ショットパターン更新
+    updateShotPattern(level) {
+        if (!this.bulletManager) return;
+        
+        this.bulletManager.setLevel(level);
+        console.log(`ショットパターンをレベル${level}に更新`);
+    }
+    
+    // レベルアップエフェクト表示
+    showLevelUpEffect(level) {
+        console.log(`レベル${level}アップエフェクト表示`);
+        
+        if (!this.effectsManager) return;
+        
+        // プレイヤー位置でレベルアップエフェクトを作成
+        if (this.player) {
+            const playerCenterX = this.player.x + this.player.width / 2;
+            const playerCenterY = this.player.y + this.player.height / 2;
+            
+            // パーティクルエフェクト
+            this.effectsManager.createLevelUpEffect(playerCenterX, playerCenterY);
+            
+            // スクリーンフラッシュエフェクト
+            this.effectsManager.createScreenFlash('#00ff00');
+        } else {
+            // プレイヤーがいない場合は画面中央
+            const centerX = window.canvasManager ? window.canvasManager.width / 2 : 400;
+            const centerY = window.canvasManager ? window.canvasManager.height / 2 : 300;
+            this.effectsManager.createLevelUpEffect(centerX, centerY);
+            this.effectsManager.createScreenFlash('#00ff00');
+        }
     }
     
     // Game state methods
