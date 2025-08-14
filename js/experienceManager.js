@@ -34,7 +34,7 @@ class ExperienceManager {
     /**
      * 経験値を獲得
      */
-    gainExp(amount) {
+    gainExp(amount, enemy = null) {
         if (this.currentLevel >= this.maxLevel) {
             return; // 最大レベル到達時は経験値を獲得しない
         }
@@ -47,7 +47,7 @@ class ExperienceManager {
         
         // 経験値獲得コールバック
         if (this.onExpGain) {
-            this.onExpGain(amount, this.currentExp, this.totalExp);
+            this.onExpGain(amount, this.currentExp, this.totalExp, enemy);
         }
         
         // レベルアップ判定
@@ -57,9 +57,9 @@ class ExperienceManager {
     /**
      * 敵タイプ別の経験値獲得
      */
-    gainExpFromEnemy(enemyType) {
+    gainExpFromEnemy(enemyType, enemy = null) {
         const expValue = this.expValues[enemyType] || 1;
-        this.gainExp(expValue);
+        this.gainExp(expValue, enemy);
     }
     
     /**

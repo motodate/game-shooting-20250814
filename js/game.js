@@ -55,6 +55,9 @@ class Game {
         // Initialize experience manager
         this.experienceManager = new ExperienceManager();
         
+        // Initialize UI manager
+        this.uiManager = new UIManager();
+        
         // Set up experience callbacks
         this.setupExperienceCallbacks();
         
@@ -116,8 +119,9 @@ class Game {
             }
         }
         
-        if (window.uiManager) {
-            window.uiManager.update();
+        // Update UI manager
+        if (this.uiManager) {
+            this.uiManager.update(deltaTime);
         }
         
         // Update game objects
@@ -216,8 +220,8 @@ class Game {
         }
         
         // Render UI
-        if (window.uiManager) {
-            window.uiManager.render(ctx);
+        if (this.uiManager) {
+            this.uiManager.render(ctx);
         }
         
         // Debug rendering
@@ -364,26 +368,33 @@ class Game {
         this.experienceManager.setOnLevelUp((oldLevel, newLevel) => {
             console.log(`レベルアップ！Lv.${oldLevel} → Lv.${newLevel}`);
             
-            // ショットパターンの更新（後で実装）
+            // ショットパターンの更新
             this.updateShotPattern(newLevel);
             
-            // レベルアップエフェクト（後で実装）
+            // レベルアップエフェクト
             this.showLevelUpEffect(newLevel);
             
-            // UI通知
-            if (window.uiManager) {
-                window.uiManager.showMessage(
+            // UI通知とアニメーション
+            if (this.uiManager) {
+                this.uiManager.showMessage(
                     `LEVEL UP! ${newLevel}`,
                     2000,
-                    'var(--neon-green)'
+                    '#00ff00'
                 );
+                this.uiManager.startLevelUpAnimation(newLevel);
             }
         });
         
         // 経験値獲得時のコールバック
-        this.experienceManager.setOnExpGain((amount, currentExp, totalExp) => {
-            // 将来的にここで経験値獲得エフェクトを表示可能
+        this.experienceManager.setOnExpGain((amount, currentExp, totalExp, enemy) => {
             console.log(`経験値 +${amount} (現在: ${currentExp})`);
+            
+            // 敵の位置で経験値獲得アニメーションを表示
+            if (this.uiManager && enemy) {
+                const enemyX = enemy.x + (enemy.width || 0) / 2;
+                const enemyY = enemy.y + (enemy.height || 0) / 2;
+                this.uiManager.startExpGainAnimation(enemyX, enemyY, amount);
+            }
         });
     }
     

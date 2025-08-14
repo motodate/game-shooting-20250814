@@ -131,7 +131,7 @@ class CollisionManager {
                         
                         // 経験値を付与
                         if (this.experienceManager) {
-                            this.experienceManager.gainExpFromEnemy(enemy.type);
+                            this.experienceManager.gainExpFromEnemy(enemy.type, enemy);
                         }
                         
                         // 爆発エフェクトを生成
@@ -390,7 +390,7 @@ class CollisionManager {
                     
                     // 経験値を付与
                     if (this.experienceManager) {
-                        this.experienceManager.gainExpFromEnemy(enemy.type);
+                        this.experienceManager.gainExpFromEnemy(enemy.type, enemy);
                     }
                     
                     // 小型機破壊エフェクト
