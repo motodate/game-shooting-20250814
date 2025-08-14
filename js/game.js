@@ -31,6 +31,9 @@ class Game {
     }
     
     setupGame() {
+        // Initialize bullet manager
+        this.bulletManager = new BulletManager();
+        
         // Initialize player
         this.player = new Player();
         
@@ -90,11 +93,18 @@ class Game {
         // Update game objects
         if (this.player) {
             this.player.update(deltaTime);
+            
+            // Handle shooting input
+            this.handleShooting(deltaTime);
+        }
+        
+        // Update bullet manager
+        if (this.bulletManager) {
+            this.bulletManager.update(deltaTime);
         }
         
         // Future updates will be added in later tickets
         // - Enemy updates
-        // - Bullet updates
         // - Collision detection
     }
     
@@ -112,9 +122,13 @@ class Game {
             this.player.render(ctx);
         }
         
+        // Render bullets
+        if (this.bulletManager) {
+            this.bulletManager.render(ctx);
+        }
+        
         // Future renders will be added in later tickets
         // - Enemy renders
-        // - Bullet renders
         // - Effect renders
         
         // Render UI
@@ -154,6 +168,31 @@ class Game {
         }
     }
     
+    // Shooting input handling
+    handleShooting(deltaTime) {
+        if (!this.player || !this.bulletManager || !window.inputManager) return;
+        
+        // プレイヤーが生きているかチェック
+        if (!this.player.alive) {
+            this.bulletManager.stopAutoFire();
+            return;
+        }
+        
+        // タップ/クリック、またはスペースキーで自動連射
+        const shouldShoot = window.inputManager.isPointerDown() || 
+                          window.inputManager.isActionDown('shoot');
+        
+        if (shouldShoot) {
+            if (!this.bulletManager.autoFiring) {
+                this.bulletManager.startAutoFire();
+            }
+            // プレイヤー位置から弾を自動発射
+            this.bulletManager.updateAutoFire(this.player.x, this.player.y);
+        } else {
+            this.bulletManager.stopAutoFire();
+        }
+    }
+
     // Game state methods
     pause() {
         // Will be implemented with GameState manager
