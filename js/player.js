@@ -323,16 +323,66 @@ class Player {
     renderDebug(ctx) {
         if (!window.game || !window.game.debugMode) return;
         
-        // デバッグ用の簡単な表示
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
-        
-        // 当たり判定領域の表示
-        ctx.strokeStyle = '#ff0000';
+        // 機体の外観ボックス表示
+        ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 1;
+        ctx.setLineDash([2, 2]);
+        ctx.strokeRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+        ctx.setLineDash([]);
+        
+        // 当たり判定領域の表示（赤い円）
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.hitboxRadius, 0, Math.PI * 2);
         ctx.stroke();
+        
+        // 当たり判定の中心点
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // タッチ追従のターゲット位置表示
+        if (this.followingPointer) {
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.arc(this.targetX, this.targetY, 6, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // ターゲットへのライン
+            ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.targetX, this.targetY);
+            ctx.stroke();
+        }
+        
+        // プレイヤー情報の表示
+        this.renderDebugInfo(ctx);
+    }
+    
+    renderDebugInfo(ctx) {
+        if (!window.game || !window.game.debugMode) return;
+        
+        const info = [
+            `Player: (${Math.round(this.x)}, ${Math.round(this.y)})`,
+            `Lives: ${this.lives}`,
+            `Invincible: ${this.invincible}`,
+            `Following: ${this.followingPointer}`
+        ];
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'left';
+        
+        const startY = 20;
+        info.forEach((text, index) => {
+            ctx.fillText(text, 10, startY + (index * 12));
+        });
     }
     
     // ダメージ処理
