@@ -387,12 +387,12 @@ class Game {
         });
     }
     
-    // ショットパターン更新（後で実装）
+    // ショットパターン更新
     updateShotPattern(level) {
         if (!this.bulletManager) return;
         
-        // 現在はプレースホルダー
-        console.log(`ショットパターンをレベル${level}に更新（未実装）`);
+        this.bulletManager.setLevel(level);
+        console.log(`ショットパターンをレベル${level}に更新`);
     }
     
     // レベルアップエフェクト表示（後で実装）
