@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cyberpunk Shooting Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- UI Elements -->
+        <div id="ui-overlay">
+            <!-- Top UI -->
+            <div id="top-ui">
+                <div id="score">SCORE: 0</div>
+                <div id="level">LEVEL: 1</div>
+            </div>
+            
+            <!-- Left UI -->
+            <div id="left-ui">
+                <div id="lives">
+                    <span class="life-icon">❤️</span>
+                    <span class="life-icon">❤️</span>
+                    <span class="life-icon">❤️</span>
+                </div>
+            </div>
+            
+            <!-- Bottom UI -->
+            <div id="bottom-ui">
+                <!-- Experience Gauge -->
+                <div id="exp-gauge-container">
+                    <div class="gauge-label">EXP</div>
+                    <div class="gauge-background">
+                        <div id="exp-gauge" class="gauge-fill"></div>
+                    </div>
+                </div>
+                
+                <!-- Time Slow Gauge -->
+                <div id="timeslow-gauge-container">
+                    <div class="gauge-label">SLOW</div>
+                    <div class="gauge-background">
+                        <div id="timeslow-gauge" class="gauge-fill"></div>
+                    </div>
+                </div>
+                
+                <!-- Time Slow Button -->
+                <button id="timeslow-btn" disabled>TIME SLOW</button>
+            </div>
+        </div>
+        
+        <!-- Debug Info -->
+        <div id="debug-info">
+            <div id="fps">FPS: 0</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/canvas.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/gameState.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

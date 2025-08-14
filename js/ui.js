@@ -1,0 +1,274 @@
+class UIManager {
+    constructor() {
+        this.elements = {
+            score: document.getElementById('score'),
+            level: document.getElementById('level'),
+            lives: document.getElementById('lives'),
+            expGauge: document.getElementById('exp-gauge'),
+            timeSlowGauge: document.getElementById('timeslow-gauge'),
+            timeSlowBtn: document.getElementById('timeslow-btn'),
+            fps: document.getElementById('fps')
+        };
+        
+        // Animation states
+        this.scoreAnimation = 0;
+        this.levelUpAnimation = 0;
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.updateAll();
+        console.log('UIManager initialized');
+    }
+    
+    bindEvents() {
+        // Time slow button
+        if (this.elements.timeSlowBtn) {
+            this.elements.timeSlowBtn.addEventListener('click', () => {
+                if (window.gameState && window.gameState.canActivateTimeSlow()) {
+                    window.gameState.activateTimeSlow();
+                }
+            });
+        }
+    }
+    
+    updateAll() {
+        if (!window.gameState) return;
+        
+        this.updateScore();
+        this.updateLevel();
+        this.updateLives();
+        this.updateGauges();
+        this.updateTimeSlowButton();
+    }
+    
+    updateScore() {
+        if (this.elements.score && window.gameState) {
+            const score = window.gameState.score.toLocaleString();
+            this.elements.score.textContent = `SCORE: ${score}`;
+            
+            // High score indicator
+            if (window.gameState.score > window.gameState.highScore) {
+                this.elements.score.style.color = 'var(--neon-yellow)';
+                this.elements.score.style.textShadow = '0 0 15px var(--neon-yellow)';
+            } else {
+                this.elements.score.style.color = 'var(--neon-cyan)';
+                this.elements.score.style.textShadow = '0 0 10px var(--neon-cyan)';
+            }
+        }
+    }
+    
+    updateLevel() {
+        if (this.elements.level && window.gameState) {
+            this.elements.level.textContent = `LEVEL: ${window.gameState.level}`;
+            
+            // Level up animation
+            if (this.levelUpAnimation > 0) {
+                this.levelUpAnimation -= 2;
+                const intensity = this.levelUpAnimation / 30;
+                this.elements.level.style.color = `rgba(255, 255, 0, ${intensity})`;
+                this.elements.level.style.textShadow = `0 0 ${20 * intensity}px var(--neon-yellow)`;
+            } else {
+                this.elements.level.style.color = 'var(--neon-cyan)';
+                this.elements.level.style.textShadow = '0 0 10px var(--neon-cyan)';
+            }
+        }
+    }
+    
+    updateLives() {
+        if (this.elements.lives && window.gameState) {
+            const livesContainer = this.elements.lives;
+            livesContainer.innerHTML = '';
+            
+            // Create life icons
+            for (let i = 0; i < window.gameState.maxLives; i++) {
+                const lifeIcon = document.createElement('span');
+                lifeIcon.className = 'life-icon';
+                
+                if (i < window.gameState.lives) {
+                    lifeIcon.textContent = '❤️';
+                    lifeIcon.style.opacity = '1';
+                } else {
+                    lifeIcon.textContent = '💔';
+                    lifeIcon.style.opacity = '0.3';
+                }
+                
+                livesContainer.appendChild(lifeIcon);
+            }
+        }
+    }
+    
+    updateGauges() {
+        if (!window.gameState) return;
+        
+        // Experience gauge
+        if (this.elements.expGauge) {
+            const expPercent = window.gameState.getExperiencePercentage();
+            this.elements.expGauge.style.width = `${expPercent}%`;
+            
+            // Full gauge glow effect
+            if (expPercent >= 100) {
+                this.elements.expGauge.style.boxShadow = '0 0 20px var(--neon-yellow)';
+            } else {
+                this.elements.expGauge.style.boxShadow = '0 0 10px currentColor';
+            }
+        }
+        
+        // Time slow gauge
+        if (this.elements.timeSlowGauge) {
+            const timeSlowPercent = window.gameState.getTimeSlowPercentage();
+            this.elements.timeSlowGauge.style.width = `${timeSlowPercent}%`;
+            
+            // Change color based on state
+            if (window.gameState.isTimeSlowActive) {
+                this.elements.timeSlowGauge.style.background = 
+                    'linear-gradient(90deg, var(--neon-red), var(--neon-yellow))';
+                this.elements.timeSlowGauge.style.boxShadow = '0 0 15px var(--neon-red)';
+            } else if (timeSlowPercent >= 100) {
+                this.elements.timeSlowGauge.style.background = 
+                    'linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta))';
+                this.elements.timeSlowGauge.style.boxShadow = '0 0 20px var(--neon-cyan)';
+            } else {
+                this.elements.timeSlowGauge.style.background = 
+                    'linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta))';
+                this.elements.timeSlowGauge.style.boxShadow = '0 0 10px currentColor';
+            }
+        }
+    }
+    
+    updateTimeSlowButton() {
+        if (this.elements.timeSlowBtn && window.gameState) {
+            const canActivate = window.gameState.canActivateTimeSlow();
+            
+            this.elements.timeSlowBtn.disabled = !canActivate;
+            
+            if (window.gameState.isTimeSlowActive) {
+                this.elements.timeSlowBtn.textContent = 'ACTIVE';
+                this.elements.timeSlowBtn.style.backgroundColor = 'var(--neon-red)';
+                this.elements.timeSlowBtn.style.color = 'var(--dark-bg)';
+                this.elements.timeSlowBtn.style.boxShadow = '0 0 20px var(--neon-red)';
+            } else if (canActivate) {
+                this.elements.timeSlowBtn.textContent = 'TIME SLOW';
+                this.elements.timeSlowBtn.style.backgroundColor = 'var(--neon-cyan)';
+                this.elements.timeSlowBtn.style.color = 'var(--dark-bg)';
+                this.elements.timeSlowBtn.style.boxShadow = '0 0 20px var(--neon-cyan)';
+            } else {
+                this.elements.timeSlowBtn.textContent = 'TIME SLOW';
+                this.elements.timeSlowBtn.style.backgroundColor = 'var(--dark-panel)';
+                this.elements.timeSlowBtn.style.color = 'var(--neon-cyan)';
+                this.elements.timeSlowBtn.style.boxShadow = '0 0 5px var(--neon-cyan)';
+            }
+        }
+    }
+    
+    // Animation triggers
+    triggerScoreAnimation() {
+        this.scoreAnimation = 30; // frames
+    }
+    
+    triggerLevelUpAnimation() {
+        this.levelUpAnimation = 60; // frames
+        console.log('Level up animation triggered');
+    }
+    
+    // Canvas-based UI rendering (for in-game overlays)
+    render(ctx) {
+        if (!window.gameState || !ctx) return;
+        
+        // Render canvas-based UI elements here if needed
+        // For now, we use HTML-based UI, but this can be extended
+        
+        this.renderDebugInfo(ctx);
+    }
+    
+    renderDebugInfo(ctx) {
+        if (!window.game || !window.game.debugMode) return;
+        
+        ctx.save();
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '10px Courier New';
+        
+        const debugInfo = [
+            `State: ${window.gameState.currentState}`,
+            `Stage: ${window.gameState.currentStage}`,
+            `Lives: ${window.gameState.lives}`,
+            `Exp: ${Math.floor(window.gameState.getExperiencePercentage())}%`
+        ];
+        
+        debugInfo.forEach((info, index) => {
+            ctx.fillText(info, 10, window.canvasManager.height - 120 + (index * 12));
+        });
+        
+        ctx.restore();
+    }
+    
+    // Show temporary messages
+    showMessage(message, duration = 2000, color = 'var(--neon-cyan)') {
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: ${color};
+            padding: 20px 40px;
+            border: 2px solid ${color};
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px currentColor;
+            box-shadow: 0 0 20px ${color};
+            z-index: 1000;
+            pointer-events: none;
+        `;
+        messageDiv.textContent = message;
+        
+        document.body.appendChild(messageDiv);
+        
+        // Remove after duration
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, duration);
+    }
+    
+    // Handle screen transitions
+    showScreen(screen) {
+        // Hide all screens first
+        const screens = ['start-screen', 'game-screen', 'pause-screen', 'gameover-screen', 'clear-screen'];
+        screens.forEach(screenId => {
+            const element = document.getElementById(screenId);
+            if (element) {
+                element.style.display = 'none';
+            }
+        });
+        
+        // Show requested screen
+        const targetScreen = document.getElementById(screen);
+        if (targetScreen) {
+            targetScreen.style.display = 'block';
+        }
+    }
+    
+    // Update method called every frame
+    update() {
+        this.updateAll();
+        
+        // Update animations
+        if (this.scoreAnimation > 0) {
+            this.scoreAnimation--;
+        }
+        
+        if (this.levelUpAnimation > 0) {
+            this.levelUpAnimation--;
+        }
+    }
+}
+
+// Global UI manager instance
+window.uiManager = new UIManager();
