@@ -30,18 +30,20 @@ class EnemyManager {
 
     spawnEnemy(x, y) {
         const enemy = this.getFromPool();
+        
         if (enemy && this.getActiveEnemyCount() < this.maxActiveEnemies) {
             enemy.x = x;
             enemy.y = y;
             enemy.active = true;
             this.enemies.push(enemy);
+            console.log(`Enemy spawned at (${x.toFixed(1)}, ${y.toFixed(1)}), Active: ${this.getActiveEnemyCount()}`);
             return enemy;
         }
         return null;
     }
 
     spawnRandomEnemy() {
-        const canvas = document.getElementById('gameCanvas');
+        const canvas = document.getElementById('game-canvas');
         if (!canvas) return null;
 
         const margin = 20;

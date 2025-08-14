@@ -108,7 +108,7 @@ class Game {
         
         // Update enemy manager
         if (this.enemyManager) {
-            this.enemyManager.update(deltaTime / 1000, performance.now());
+            this.enemyManager.update(deltaTime, performance.now());
         }
         
         // Future updates will be added in later tickets
@@ -165,7 +165,14 @@ class Game {
         // Enemy debug info
         if (this.enemyManager) {
             const enemyDebug = this.enemyManager.getDebugInfo();
+            const activeEnemies = this.enemyManager.getActiveEnemies();
             ctx.fillText(`Enemies: ${enemyDebug.activeEnemies}/${enemyDebug.maxActiveEnemies}`, window.canvasManager.width - 120, window.canvasManager.height - 60);
+            
+            // Show positions of first 3 active enemies
+            for (let i = 0; i < Math.min(3, activeEnemies.length); i++) {
+                const enemy = activeEnemies[i];
+                ctx.fillText(`E${i}: (${enemy.x.toFixed(0)}, ${enemy.y.toFixed(0)})`, window.canvasManager.width - 120, window.canvasManager.height - 80 - (i * 15));
+            }
         }
     }
     

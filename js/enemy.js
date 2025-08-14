@@ -15,7 +15,7 @@ class Enemy {
         this.maxHp = 1;
         this.width = 20;
         this.height = 20;
-        this.active = true;
+        this.active = false;
         this.destroyed = false;
         this.createdAt = Date.now();
     }
@@ -30,8 +30,8 @@ class Enemy {
     }
 
     checkBounds() {
-        const canvas = document.getElementById('gameCanvas');
-        if (this.y > canvas.height + this.height) {
+        const canvas = document.getElementById('game-canvas');
+        if (canvas && this.y > canvas.height + this.height) {
             this.destroy();
         }
     }
@@ -93,7 +93,15 @@ class SmallEnemy extends Enemy {
         this.maxHp = 1;
         this.width = 16;
         this.height = 16;
-        this.vy = 120;
+        this.vy = 0.15; // pixel/ms (150 pixel/second)
+    }
+
+    reset() {
+        super.reset();
+        // SmallEnemy固有の設定を再適用
+        this.vy = 0.15;
+        this.width = 16;
+        this.height = 16;
     }
 
     drawEnemy(ctx) {
