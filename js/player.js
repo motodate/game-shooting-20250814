@@ -137,21 +137,60 @@ class Player {
     }
     
     constrainToScreen() {
-        // 画面境界制限のプレースホルダー
-        // 後のコミットで実装予定
         if (!window.canvasManager) return;
         
+        // 移動可能エリアの定義
+        const margin = 5; // 画面端からの余白
         const halfWidth = this.width / 2;
         const halfHeight = this.height / 2;
         
-        if (this.x < halfWidth) this.x = halfWidth;
-        if (this.x > window.canvasManager.width - halfWidth) {
-            this.x = window.canvasManager.width - halfWidth;
+        const minX = halfWidth + margin;
+        const maxX = window.canvasManager.width - halfWidth - margin;
+        const minY = halfHeight + margin;
+        const maxY = window.canvasManager.height - halfHeight - margin;
+        
+        // X軸の境界制限
+        if (this.x < minX) {
+            this.x = minX;
+            // タッチ追従のターゲットも制限
+            if (this.followingPointer) {
+                this.targetX = Math.max(this.targetX, minX);
+            }
+        } else if (this.x > maxX) {
+            this.x = maxX;
+            if (this.followingPointer) {
+                this.targetX = Math.min(this.targetX, maxX);
+            }
         }
-        if (this.y < halfHeight) this.y = halfHeight;
-        if (this.y > window.canvasManager.height - halfHeight) {
-            this.y = window.canvasManager.height - halfHeight;
+        
+        // Y軸の境界制限
+        if (this.y < minY) {
+            this.y = minY;
+            if (this.followingPointer) {
+                this.targetY = Math.max(this.targetY, minY);
+            }
+        } else if (this.y > maxY) {
+            this.y = maxY;
+            if (this.followingPointer) {
+                this.targetY = Math.min(this.targetY, maxY);
+            }
         }
+    }
+    
+    // 移動可能エリアの取得（他のシステムで使用可能）
+    getPlayableArea() {
+        if (!window.canvasManager) return null;
+        
+        const margin = 5;
+        const halfWidth = this.width / 2;
+        const halfHeight = this.height / 2;
+        
+        return {
+            minX: halfWidth + margin,
+            maxX: window.canvasManager.width - halfWidth - margin,
+            minY: halfHeight + margin,
+            maxY: window.canvasManager.height - halfHeight - margin
+        };
     }
     
     render(ctx) {
