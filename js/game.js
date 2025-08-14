@@ -34,6 +34,9 @@ class Game {
         // Initialize bullet manager
         this.bulletManager = new BulletManager();
         
+        // Initialize enemy bullet manager
+        this.enemyBulletManager = new EnemyBulletManager();
+        
         // Initialize player
         this.player = new Player();
         
@@ -108,7 +111,16 @@ class Game {
         
         // Update enemy manager
         if (this.enemyManager) {
-            this.enemyManager.update(deltaTime, performance.now());
+            const playerX = this.player ? this.player.x + this.player.width / 2 : null;
+            const playerY = this.player ? this.player.y + this.player.height / 2 : null;
+            this.enemyManager.update(deltaTime, performance.now(), this.enemyBulletManager, playerX, playerY);
+        }
+        
+        // Update enemy bullets
+        if (this.enemyBulletManager) {
+            const playerX = this.player ? this.player.x + this.player.width / 2 : null;
+            const playerY = this.player ? this.player.y + this.player.height / 2 : null;
+            this.enemyBulletManager.update(deltaTime, playerX, playerY);
         }
         
         // Future updates will be added in later tickets
@@ -139,6 +151,11 @@ class Game {
             this.enemyManager.draw(ctx);
         }
         
+        // Render enemy bullets
+        if (this.enemyBulletManager) {
+            this.enemyBulletManager.render(ctx);
+        }
+        
         // Future renders will be added in later tickets
         // - Effect renders
         
@@ -165,14 +182,21 @@ class Game {
         // Enemy debug info
         if (this.enemyManager) {
             const enemyDebug = this.enemyManager.getDebugInfo();
-            const activeEnemies = this.enemyManager.getActiveEnemies();
             ctx.fillText(`Enemies: ${enemyDebug.activeEnemies}/${enemyDebug.maxActiveEnemies}`, window.canvasManager.width - 120, window.canvasManager.height - 60);
             
-            // Show positions of first 3 active enemies
-            for (let i = 0; i < Math.min(3, activeEnemies.length); i++) {
-                const enemy = activeEnemies[i];
-                ctx.fillText(`E${i}: (${enemy.x.toFixed(0)}, ${enemy.y.toFixed(0)})`, window.canvasManager.width - 120, window.canvasManager.height - 80 - (i * 15));
+            // Show enemy type counts
+            const typeCounts = enemyDebug.enemyTypeCounts;
+            let yOffset = 80;
+            for (const [type, count] of Object.entries(typeCounts)) {
+                ctx.fillText(`${type}: ${count}`, window.canvasManager.width - 120, window.canvasManager.height - yOffset);
+                yOffset += 15;
             }
+        }
+        
+        // Enemy bullet debug info
+        if (this.enemyBulletManager) {
+            const bulletDebug = this.enemyBulletManager.getDebugInfo();
+            ctx.fillText(`E-Bullets: ${bulletDebug.activeBullets}/${bulletDebug.maxActiveBullets}`, window.canvasManager.width - 120, window.canvasManager.height - 140);
         }
     }
     
